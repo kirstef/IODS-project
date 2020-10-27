@@ -16,7 +16,7 @@ As a graduate student in physics I got quite fond of using python for my data an
 
 **My expectations ** 
 
-I am now quite excited to see and compare what is possible with R - I am looking forward to participate in this interesting course! So far, the "warming up" week went fine and the introductions were easy to follow. The syntax shown too far didn't look too complicated and partially familiar to *python* or *python* libraries such as *pandas* and *matplotlib*. As I am quite used to python (and it is more and more used in natural sciences), I don't expect to switch to *R* after the course, but would love to learn more about it and achieve an understanding of what the pros and cons are. So that in some particular case I might be able to say "Ok, this is something for what *R* might be in fact better." And furthermore, it's always fun to learn new skills.:)
+I am now quite excited to see and compare what is possible with R - I am looking forward to participate in this interesting course! So far, the "warming up" week went fine and the introductions were easy to follow. The syntax shown so far didn't look too complicated and partially familiar to *python* or *python* libraries such as *pandas* and *matplotlib*. As I am quite used to python (and it is more and more used in natural sciences), I don't expect to switch to *R* after the course, but would love to learn more about it and achieve an understanding of what the pros and cons are. So that in some particular case I might be able to say "Ok, this is something for what *R* might be in fact better." And furthermore, it's always fun to learn new skills.:)
 
 **Link to my GitHub repository ** 
 
