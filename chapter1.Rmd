@@ -3,33 +3,24 @@
 
 *Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
 
-### My background and expectations
-
-
-**How I found out about this course**
-
-I already came across this course last year (unfortunately didn't have the time to participate) and was already intrigued about the contents and impressed by the fabulous feedback.
-
-**My background ** 
-
-As a graduate student in physics I got quite fond of using python for my data analysis work, e.g. extracting useful things out of huge data sets, manipulating data frames, visualize data in an understandable way.
-
-**My expectations ** 
-
-I am now quite excited to see and compare what is possible with R - I am looking forward to participate in this interesting course! So far, the "warming up" week went fine and the introductions were easy to follow. The syntax shown so far didn't look too complicated and partially familiar to *python* or *python* libraries such as *pandas* and *matplotlib*. As I am quite used to python (and it is more and more used in natural sciences), I don't expect to switch to *R* after the course, but would love to learn more about it and achieve an understanding of what the pros and cons are. So that in some particular case I might be able to say "Ok, this is something for what *R* might be in fact better." And furthermore, it's always fun to learn new skills.:)
-
-**Link to my GitHub repository ** 
-
-https://github.com/kirstef/IODS-project
-
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
 
-date()
-# I don't know if I should extend this example here, but just to try it out:
-print("Hello R")
+today <- date()
+paste("Today is", today, ". Hello R!")
 
 ```
-The text continues here.
+
+### My background and expectations
+
+**How I found out about this course**: I already came across this course last year (unfortunately didn't have the time to participate) and was already intrigued about the contents and impressed by the fabulous feedback.
+
+
+**My background and expectations**: As a graduate student in physics I got quite fond of using python for my data analysis work.
+Now, I am quite excited to see and compare what is possible with R - I am looking forward to participate in this interesting course! So far, the "warming up" week went fine and the introductions were easy to follow. The syntax shown so far didn't look too complicated and partially familiar to *python* or *python* libraries such as *pandas* and *matplotlib*. As I am quite used to python (and it is more and more used in natural sciences), I don't expect to switch to *R* after the course, but would love to learn more about it and achieve an understanding of what the pros and cons are. So if something comes up in the future for what *R* is actually more suited, I will be able to use it or -- if collaborators use it -- able to understand it. And furthermore, it's always fun to learn new skills.:)
+
+### Practicalities
+
+**Link to my GitHub repository **: https://github.com/kirstef/IODS-project
 
 **Looking forward to next week!**
