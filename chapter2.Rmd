@@ -11,73 +11,16 @@
 interesting features.**
 
 ## Data wrangling 
-**REMARK: This part is in principle the same as the code executed in the .R file in the data-folder. Still, I would like to include the main points in the diary so that one can see the development from the original dataset to the analysed subset.**
+**REMARK: The data wrangling part is done in the .R file in the data-folder. Still, I will show a preview of the original dataset in the diary as it shows the development from the original data to the dataset we finally evaluate.**
 
 ### Looking at the original dataset
-
 
 First let's read in the full learning2014 data as a dataframe from the given website.
 ```{r}
 lrn14 <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt", sep="\t", header=TRUE)
 head(lrn14)
 ```
-Only looking at the head of the dataframe makes it quite visible that some data wrangling will help in understanding the data better. 
-
-
-As a next step, let's look at
-the *structure* and *dimensions*. Printing all of it would make the report confusing, so I am using ***eval=FALSE*** to not run the code and write the results instead as a comment into the R chunk.
-```{r, eval=FALSE}
-dim(lrn14) # The dataframe consists of 183 observations and 60 variables.
-str(lrn14) # 59 variables are of the data type "integer" and 1 (gender) of the type "character"
-```
-
-
-### Preparing an analysis sub dataset for further data exploration
-For this we have to include the library *dplyr* (***library(dplyr)***) which is a common R library used for data wrangling
-```{r,message=FALSE}
-library(dplyr)
-```
-
-**Combining question variables**
-```{r}
-deep_questions <- c("D03", "D11", "D19", "D27", "D07", "D14", "D22", "D30","D06",  "D15", "D23", "D31")
-surface_questions <- c("SU02","SU10","SU18","SU26", "SU05","SU13","SU21","SU29","SU08","SU16","SU24","SU32")
-strategic_questions <- c("ST01","ST09","ST17","ST25","ST04","ST12","ST20","ST28")
-```
-
-**Combining columns and add a weighted column to the dataset**
-```{r}
-deep_columns <- select(lrn14, one_of(deep_questions))
-surface_columns <- select(lrn14, one_of(surface_questions))
-strategic_columns <- select(lrn14, one_of(strategic_questions))
-```
-
-**Create a new sub dataframe**
-
-Using the ***head()*** function the output gives us the first 6 rows of the subset.
-```{r}
-# create the df subsect
-df_subset <- c("gender","Age","Points")
-learning2014 <- select(lrn14,one_of(df_subset))
-learning2014$attitude= lrn14$Attitude/10
-learning2014$deep <- rowMeans(deep_columns)
-learning2014$stra <- rowMeans(strategic_columns)
-learning2014$surf <- rowMeans(surface_columns)
-head(learning2014)
-```
-**Do some reformatting and scaling of attitude value**
-
-We want to have the points in the end and all the variable to be lowercase. Furthermore, as the *attitude* variable is also a combined value based on 10 questions it will be divided by 10.
-```{r}
-
-# change the name of the second column
-colnames(learning2014)[2] <- "age"
-# change the name of "Points" to "points"
-colnames(learning2014)[3] <- "points"
-# reorder the dataframe
-learning2014 <- learning2014[c(1,2,4,5,6,7,3)] 
-head(learning2014)
-```
+Only looking at the head of the dataframe makes it quite visible that some data wrangling will help in understanding the data better. It also shows that meta data is quite valuable as we don't know by just looking at the variable what their meaning is.
 ## Data analysis
 ### Looking at the new data subset
 **Reading in the data from a .csv created in the project subfolder**
