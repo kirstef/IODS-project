@@ -21,11 +21,18 @@ lrn14 <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt
 head(lrn14)
 ```
 Only looking at the head of the dataframe makes it quite visible that some data wrangling will help in understanding the data better. It also shows that meta data is quite valuable as we don't know by just looking at the variable what their meaning is.
+
 ## Data analysis
+### Preparing an analysis sub dataset for further data exploration
+For this we have to include the library *dplyr* (```library(dplyr)```) which is a common R library used for data wrangling
+```{r,message=FALSE}
+library(dplyr)
+```
+
 ### Looking at the new data subset
 **Reading in the data from a .csv created in the project subfolder**
 
-First let's use ***read.csv()*** or ***read.table()*** to read in the data subset created before and display the head of it.
+First let's use ```read.csv()``` or ```read.table()``` to read in the data subset created before and display the head of it.
 ```{r, results='hide'}
 students2014 <- read.csv("./data/learning2014.csv", header = TRUE, sep = ",")
 students2014b <- read.table("./data/learning2014.txt", sep = "\t", header = TRUE)
@@ -46,7 +53,7 @@ students obtained in the respective categories in the scale (0-5), 2 *integer* t
 
 **Getting rid of 0 values**
 ```{r}
-# select rows where points is greater than zero
+# select rows where points are greater than zero
 students2014 <- filter(students2014, points > 0) 
 students2014b <- filter(students2014b, points > 0) 
 dim(students2014)

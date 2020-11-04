@@ -455,7 +455,7 @@ summary {
 
 today &lt;- date()
 paste(&quot;Today is&quot;, today, &quot;. Hello R! Hello world!&quot;)</code></pre>
-<pre><code>## [1] &quot;Today is Tue Nov  3 18:13:41 2020 . Hello R! Hello world!&quot;</code></pre>
+<pre><code>## [1] &quot;Today is Wed Nov  4 10:11:22 2020 . Hello R! Hello world!&quot;</code></pre>
 <div id="my-background-and-expectations" class="section level3">
 <h3>My background and expectations</h3>
 <p><strong>How I found out about this course</strong>: I already came across this course last year (unfortunately didn’t have the time to participate) and was already intrigued about the contents and impressed by the fabulous feedback.</p>
@@ -479,7 +479,7 @@ paste(&quot;Today is&quot;, today, &quot;. Hello R! Hello world!&quot;)</code></
 <p><strong>In this chapter we will explore the dataset from <em><a href="http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt" class="uri">http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt</a></em>, looking first closer at the dataframe and afterwards visualize some interesting features.</strong></p>
 <div id="data-wrangling" class="section level2">
 <h2>Data wrangling</h2>
-<p><strong>REMARK: This part is in principle the same as the code executed in the .R file in the data-folder. Still, I would like to include the main points in the diary so that one can see the development from the original dataset to the analysed subset.</strong></p>
+<p><strong>REMARK: The data wrangling part is done in the .R file in the data-folder. Still, I will show a preview of the original dataset in the diary as it shows the development from the original data to the dataset we finally evaluate.</strong></p>
 <div id="looking-at-the-original-dataset" class="section level3">
 <h3>Looking at the original dataset</h3>
 <p>First let’s read in the full learning2014 data as a dataframe from the given website.</p>
@@ -513,60 +513,16 @@ head(lrn14)</code></pre>
 ## 4       35     10      M
 ## 5       37     22      M
 ## 6       38     21      F</code></pre>
-<p>Only looking at the head of the dataframe makes it quite visible that some data wrangling will help in understanding the data better.</p>
-<p>As a next step, let’s look at the <em>structure</em> and <em>dimensions</em>. Printing all of it would make the report confusing, so I am using <strong><em>eval=FALSE</em></strong> to not run the code and write the results instead as a comment into the R chunk.</p>
-<pre class="r"><code>dim(lrn14) # The dataframe consists of 183 observations and 60 variables.
-str(lrn14) # 59 variables are of the data type &quot;integer&quot; and 1 (gender) of the type &quot;character&quot;</code></pre>
-</div>
-<div id="preparing-an-analysis-sub-dataset-for-further-data-exploration" class="section level3">
-<h3>Preparing an analysis sub dataset for further data exploration</h3>
-<p>For this we have to include the library <em>dplyr</em> (<strong><em>library(dplyr)</em></strong>) which is a common R library used for data wrangling</p>
-<pre class="r"><code>library(dplyr)</code></pre>
-<p><strong>Combining question variables</strong></p>
-<pre class="r"><code>deep_questions &lt;- c(&quot;D03&quot;, &quot;D11&quot;, &quot;D19&quot;, &quot;D27&quot;, &quot;D07&quot;, &quot;D14&quot;, &quot;D22&quot;, &quot;D30&quot;,&quot;D06&quot;,  &quot;D15&quot;, &quot;D23&quot;, &quot;D31&quot;)
-surface_questions &lt;- c(&quot;SU02&quot;,&quot;SU10&quot;,&quot;SU18&quot;,&quot;SU26&quot;, &quot;SU05&quot;,&quot;SU13&quot;,&quot;SU21&quot;,&quot;SU29&quot;,&quot;SU08&quot;,&quot;SU16&quot;,&quot;SU24&quot;,&quot;SU32&quot;)
-strategic_questions &lt;- c(&quot;ST01&quot;,&quot;ST09&quot;,&quot;ST17&quot;,&quot;ST25&quot;,&quot;ST04&quot;,&quot;ST12&quot;,&quot;ST20&quot;,&quot;ST28&quot;)</code></pre>
-<p><strong>Combining columns and add a weighted column to the dataset</strong></p>
-<pre class="r"><code>deep_columns &lt;- select(lrn14, one_of(deep_questions))
-surface_columns &lt;- select(lrn14, one_of(surface_questions))
-strategic_columns &lt;- select(lrn14, one_of(strategic_questions))</code></pre>
-<p><strong>Create a new sub dataframe</strong></p>
-<p>Using the <strong><em>head()</em></strong> function the output gives us the first 6 rows of the subset.</p>
-<pre class="r"><code># create the df subsect
-df_subset &lt;- c(&quot;gender&quot;,&quot;Age&quot;,&quot;Points&quot;)
-learning2014 &lt;- select(lrn14,one_of(df_subset))
-learning2014$attitude= lrn14$Attitude/10
-learning2014$deep &lt;- rowMeans(deep_columns)
-learning2014$stra &lt;- rowMeans(strategic_columns)
-learning2014$surf &lt;- rowMeans(surface_columns)
-head(learning2014)</code></pre>
-<pre><code>##   gender Age Points attitude     deep  stra     surf
-## 1      F  53     25      3.7 3.583333 3.375 2.583333
-## 2      M  55     12      3.1 2.916667 2.750 3.166667
-## 3      F  49     24      2.5 3.500000 3.625 2.250000
-## 4      M  53     10      3.5 3.500000 3.125 2.250000
-## 5      M  49     22      3.7 3.666667 3.625 2.833333
-## 6      F  38     21      3.8 4.750000 3.625 2.416667</code></pre>
-<p><strong>Do some reformatting and scaling of attitude value</strong></p>
-<p>We want to have the points in the end and all the variable to be lowercase. Furthermore, as the <em>attitude</em> variable is also a combined value based on 10 questions it will be divided by 10.</p>
-<pre class="r"><code># change the name of the second column
-colnames(learning2014)[2] &lt;- &quot;age&quot;
-# change the name of &quot;Points&quot; to &quot;points&quot;
-colnames(learning2014)[3] &lt;- &quot;points&quot;
-# reorder the dataframe
-learning2014 &lt;- learning2014[c(1,2,4,5,6,7,3)] 
-head(learning2014)</code></pre>
-<pre><code>##   gender age attitude     deep  stra     surf points
-## 1      F  53      3.7 3.583333 3.375 2.583333     25
-## 2      M  55      3.1 2.916667 2.750 3.166667     12
-## 3      F  49      2.5 3.500000 3.625 2.250000     24
-## 4      M  53      3.5 3.500000 3.125 2.250000     10
-## 5      M  49      3.7 3.666667 3.625 2.833333     22
-## 6      F  38      3.8 4.750000 3.625 2.416667     21</code></pre>
+<p>Only looking at the head of the dataframe makes it quite visible that some data wrangling will help in understanding the data better. It also shows that meta data is quite valuable as we don’t know by just looking at the variable what their meaning is.</p>
 </div>
 </div>
 <div id="data-analysis" class="section level2">
 <h2>Data analysis</h2>
+<div id="preparing-an-analysis-sub-dataset-for-further-data-exploration" class="section level3">
+<h3>Preparing an analysis sub dataset for further data exploration</h3>
+<p>For this we have to include the library <em>dplyr</em> (<strong><em>library(dplyr)</em></strong>) which is a common R library used for data wrangling</p>
+<pre class="r"><code>library(dplyr)</code></pre>
+</div>
 <div id="looking-at-the-new-data-subset" class="section level3">
 <h3>Looking at the new data subset</h3>
 <p><strong>Reading in the data from a .csv created in the project subfolder</strong></p>
@@ -596,7 +552,7 @@ students2014b &lt;- read.table(&quot;./data/learning2014.txt&quot;, sep = &quot;
 ##  $ points  : int  25 12 24 10 22 21 21 31 24 26 ...</code></pre>
 <p>This sub dataset consists of 7 variables (which were defined above) and 183 observations. The datatypes consist of 4 <em>numerical</em> type variables which give us the grade that the students obtained in the respective categories in the scale (0-5), 2 <em>integer</em> type variables giving the age and the points, and one <em>character</em> type variable stating the gender.</p>
 <p><strong>Getting rid of 0 values</strong></p>
-<pre class="r"><code># select rows where points is greater than zero
+<pre class="r"><code># select rows where points are greater than zero
 students2014 &lt;- filter(students2014, points &gt; 0) 
 students2014b &lt;- filter(students2014b, points &gt; 0) 
 dim(students2014)</code></pre>
