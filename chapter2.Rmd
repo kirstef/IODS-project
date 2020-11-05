@@ -29,73 +29,121 @@ For this we have to include the library *dplyr* (```library(dplyr)```) which is 
 library(dplyr)
 ```
 
-### Looking at the new data subset
-**Reading in the data from a .csv created in the project subfolder**
+### 1. Looking at the new data subset: Reading in the students2014 data
 
-First let's use ```read.csv()``` or ```read.table()``` to read in the data subset created before and display the head of it.
+
+First let's use ```read.csv()``` or ```read.table()``` to read in the data subset created before and saved as a .csv in the project data-subfolder.
 ```{r, results='hide'}
-students2014 <- read.csv("./data/learning2014.csv", header = TRUE, sep = ",")
-students2014b <- read.table("./data/learning2014.txt", sep = "\t", header = TRUE)
+students2014 <- read.csv("./data/learning2014.csv", header = TRUE, sep = ",", stringsAsFactors = TRUE)
 ```
-
-```{r}
+With ```head(students2014)``` we can display the first six rows of the subset. It is now much better readable and interpretable than before.
+```{r,echo=FALSE}
 head(students2014)
 ```
 
 **Structure and dimension of the subset**
+
+With ```dim()``` and ```str()``` we can further explore the dimension and structure of the dataset.
 ```{r}
 dim(students2014)
 str(students2014)
 
 ```
-This sub dataset consists of 7 variables (which were defined above) and 183 observations. The datatypes consist of 4 *numerical* type variables which give us the grade that the 
+``dim()`` already gives us that the subset consists of 7 variables and 183 observations. ```str()``` gives further information: The variables are those that we defined before (cf. R-script) and consist of 4 combined variables of type *numerical* which give us the grade that the 
 students obtained in the respective categories in the scale (0-5), 2 *integer* type variables giving the age and the points, and one *character* type variable stating the gender.
 
 **Getting rid of 0 values**
+We can filter our subset further to e.g. exclude the students who didn't participate in the final exam
+and look afterwards again at the dimension.
 ```{r}
 # select rows where points are greater than zero
 students2014 <- filter(students2014, points > 0) 
-students2014b <- filter(students2014b, points > 0) 
 dim(students2014)
 
 ```
-As one can see we have $183-166=17$ rows with 0 points, so students not taking the final exam.
+As one can see we have $183-166=17$ rows with 0 points, so students not taking the final exam. Let's keep it like this for the further exploration of the data set, as the reasons for not taking the exam are unknown to us and thus don't necessary have a high relation to the attitude our other variables.
 
-### Visualizations
-**Graphical overview of the data**
+### 2. Visualizations: Graphical overview of the data
 
+Using ```ggpairs``` gives us a good graphical overview of the data and the correlation of the different variables to each other. Using ```col=gender``` in the mapping argument let's us also see gender-differences (color-coded, female(red), male(blueish)).
 
-```{r}
+```{r, message=FALSE}
 library(ggplot2)
 library(GGally)
 # create a plot matrix with ggpairs()
 ggpairs(students2014, mapping = aes(col = gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
-summary(students2014)
 ```
 
-### Regression model
-From the pairs plot above let's choose the 3 variables with highest correlation to points as explanatory variables to be used for the regression model. The exam points
-will then be our target variable: **exam points ~ x1 + x2 + x3**. The respective variables would be *attitude*, *stra* and *surf*.
+Studying the plot in more detail, we see the following parts: scatter plots between the different variables, distributions of the different variables, and correlation values between the different variables. The higher the absolute value of the correlation value, the higher the correlation between the respective variables. As we can seen, the highest correlation seems to be between **points** and **attitude**. Looking at the scatter plot between these two variable we can also see that the data points are roughly scattered along a line, which hints as well at a relation between them. The point distribution for the attitude shows a visible gender difference. Where the distribution for the female students rises to about 2.5 to almost a "plateau" (until 3.5), the distribution for the male students shows only a small fraction of people having the grade 2 or less - after that there is a steep rise to the peak at a bit over 3. The surface question distribution ("surf") shows a maximum at about 3 for the female students, which is higher than for the male students. For the **age** one can see (as expected) that most of the students are between 20 and 30 years old.
+```{r}
+summary(students2014)
+```
+The ```summary()``` command gives us again an overview on the statistics of the different variables. We have about twice as many female students as male students, the mean age is between 25-26 years, the mean grade for the question types (deep, strategic, surface) lies between 2.8 and 3.7, with **deep** questions scoring highest. The mean attitude lies at 3.2 and the points at about 23. Apart from these mean values, we get further information: the minimum and maximum values, the 1st and 3rd quartiles and the median.
+
+### 3. Regression model
+From the pairs plot above let's choose the points as our target value and the 3 variables with the highest correlation to points as explanatory variables to be used for the regression model: **exam points ~ x1 + x2 + x3**. The respective variables would be *attitude* (corr: 0.437), *stra* (corr: 0.146) and *surf* (corr: -0.140).
+
+```summary(model)``` gives us further information on the validity and significance of our model.
 **Further description and interpretation will still be added.**
 ```{r}
 # create a regression model with multiple explanatory variables
 my_model <- lm(points ~ attitude + stra + surf, data = students2014)
 summary(my_model)
 ```
+To find more out abouth the significance of the correlations we can look at **t-value** and **Pr(>|t|)**.
+The understanding of the t-value is here, that it get's bigger if the Null-Hypothesis is not true. The Null-Hypothesis in this case would be that there is no relation between the variable and the target value. The t-value on its own is difficult to interpret, but **Pr(>|t|)** gives us then the probability for getting the same t-value if the Null-Hypothesis would be true. As one can see, this probability is very low for **attitude**, which is also implied by the *** next to the value, which are described as significance codes in the legend. Thus, a relation between **points** and **attitude** is quite obvious.
+Both **stra** and **surf** don't have any significant relation to the target variable, thus I will remove them from the model.
 
+Just for fun once more the model with **attitude** and **stra**:
 ```{r}
 my_model2 <- lm(points ~ attitude + stra, data = students2014)
 summary(my_model2)
 ```
+The **t-value**  is a bit higher and the **Pr(>|t|)** a bit smaller, but still the relation is quite insignificant.
 
+### 4. Reduced regression model: Summary of fitted model  
+After having also remove the **stra** variable from the model, the model is reduced to the following one:
 ```{r}
 my_model3 <- lm(points ~ attitude, data = students2014)
 summary(my_model3)
 ```
+The values show no a clear significance of the relation between **points** and **attitude**. So what does that mean? Apparently, the attitude towards the course influence the final result in the exam (points). That relation is not really surprising: If you like a course and are interested in it, you are probably learning more or studying more for it and will probably easier get more points.
+The model created now could now be used to predict the points of a person with attitude=x. 
 
-### Diagnostics plot
+**Prediction of points for students with different attitudes**
+```{r}
+
+new_students <- c("Student X" = 2.5, "Student Y" = 4.8)
+new_data <- data.frame(attitude = new_students)
+
+# Predict the new students exam points based on attitude
+predict(my_model3, newdata = new_data)
+
+```
+Plotting the two variables against each other we can see that the predicted points are right where they should be (as it makes sense, because it is the same model). However, we can see that there is still a lot of scattering of the points above and below the regression lines. But, the tendency of the relationship is quite visible. The multiple R-squared value is a measure for how good our fitted model is and how strong the relation. The value of about 0.2 explains for about 20% variation from the mean. So the model might not be perfect, but still might be good. To judge this further, one has to take a look at the residuals.
+```{r}
+library(ggplot2)
+# plotting the two variables against each other with aesthetic mapping
+p1 <- ggplot(students2014, aes(x = attitude, y = points, col=gender))
+
+# using points for visualization
+p2 <- p1 + geom_point()
+
+# add a regression line and plot
+p3 <- p2 + geom_smooth(method = "lm")
+p3
+```
+
+
+### 5. Diagnostics plot
+
+The Residuals vs. Fitted Values plot shows that the errors are quite normally distributed both above and under the 0-line, which is a good sine for our model.
+
+The QQ plot explains the behaviour for most of inner quantiles and only diverges from the line in the outer quantiles.
+
+The residuals vs. Leverage plot can show us if some points have too much leverage (outliers). In this case there is no outlier visible that completely changes the trend of the curve.
 ```{r}
 #par(mfrow = c(2,2)) #To put the images in the same figures. However, I prefer them a bit bigger right now.
-plot(my_model2, which=c(1,2,5))
+plot(my_model3, which=c(1,2,5))
 ```
-**Description and interpretation will still be added.**
+

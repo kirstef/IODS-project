@@ -46,5 +46,5 @@ head(learning2014)
 # The dataframe will be saved  as a .csv file inside the data folder, the path has to be given in reference to the working directory.
 # WD <- getwd() : to get the current working directory
 # setwd(WD) : setting the current working directory to WD
-write.csv(learning2014, file = './data/learning2014.csv')
-write.table(learning2014, file = "./data/learning2014.txt", sep = "\t", row.names = TRUE, col.names = NA)
+write.csv(learning2014, file = './data/learning2014.csv', row.names = FALSE)
+write.table(learning2014, file = "./data/learning2014.txt", sep = ",", row.names = FALSE)
