@@ -101,7 +101,24 @@ g8 + geom_bar()
 Again, the numeric cross tabulations as well as the plots are supporting the hypothesis. Going out with friends more often (higher value) seems to have an impact on the alcohol consumption.
 
 ### 5. Logistic regression
+```{r}
+# find the model with glm()
+m <- glm(high_use ~ sex + failures + famrel + goout, data = alc, family = "binomial")
+summary(m)
+```
+The model summary shows a high significance for the correlation to *sex* and *goout*, a medium significance for *famrel* und no signifant value for *failure*. One could fit the model again, dropping at least the *failure* variable. But first let's study the odds ratios.
+```{r}
+coef(m)
 
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+```
 
 ### 6. Predictive power of Model
 
