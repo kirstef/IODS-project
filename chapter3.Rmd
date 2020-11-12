@@ -147,6 +147,32 @@ select(alc, sex, famrel, goout,  high_use, probability, prediction) %>% tail(10)
 table(high_use = alc$high_use, prediction = alc$prediction)
 ```
 
+To graphically visualize the actual values and the predictions, we can draw a plot of 'high use' vs. 'probability'.
+```{r}
+g <- ggplot(alc, aes(x = probability, y = high_use, col=prediction))
+g + geom_point()
+```
+
+Furthermore, we can do another cross-tab of predictions vs. actual values, printing out the fractions instead and adding margins.
+```{r}
+table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table() %>% addmargins()
+```
+
+**Accuracy of the model**
+The proportion of inaccurately classified individuals (training error) can be calculated by taking the values from the confusion matrix: 
+(18+63)/(250+18+63+51) = 0.21. We will get the same value by defiing a loss function as below:
+```{r}
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, prob = alc$probability)
+```
+The loss function gives us a value of about 0.21 (as also calculated before), meaning that about 21% of the predictions will be wrong. This value is better than the value in the DataCamp example (about 26%), making this model slightly better.
+
 ### 7. Bonus: 10-fold cross-validation
 
 
