@@ -1,6 +1,7 @@
 # Stefanie Kirschenmann, 2020/11/11: Script for the data wrangling part of week 3 of the IODS course (Logistic Regression).
 
-# read the math class questionaire data into memory. Reading in strings as factors
+#### READING IN THE DATASETS ####
+#read the math class questionaire data into memory. Reading in strings as factors #####
 math <- read.table("./data/student-mat.csv", sep = ";" , header=TRUE,  stringsAsFactors = TRUE)
 
 # read the portuguese class questionaire data into memory
@@ -18,12 +19,12 @@ dim(por) # por has 33 variables and 649 observations
 str(math) # The structure consists of two kind of datatypes: integer and character. The character type is evaluated as Factor with different categories via the argument "stringAsFactors = TRUE")
 str(por)
 
-## Join the two data sets ##
+#### JOIN THE TWO DATA SETS ####
 
 # access the dplyr library
 library(dplyr)
 
-# columns to use as (student) identifiers
+# (student) identifiers columns
 join_by <- c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet")
 
 # join the two datasets by the selected identifiers
@@ -41,14 +42,14 @@ glimpse(alc)
 dim(math_por)
 head(math_por)
 
-### Get rid of double answers/combine them ###
+#### GETTING RID OF DUPLICATES/COMBINING ####
 # the columns in the datasets which were not used for joining the data
 notjoined_columns <- colnames(math)[!colnames(math) %in% join_by]
 
 # print out the columns not used for joining
 notjoined_columns
 
-# for every column name not used for joining...
+# for every column name not used for joining... DataCamp if-else structure
 for(column_name in notjoined_columns) {
   # select two columns from 'math_por' with the same original name
   two_columns <- select(math_por, starts_with(column_name))
@@ -66,7 +67,7 @@ for(column_name in notjoined_columns) {
   }
 }
 
-## Take the mean of the workday and weekend alcohol consumption (Dalc, Walc) and add it as a new column "alc_use" to alc ##
+#### MEAN OF WEEKDAY/WEEKEND ALCOHOL CONSUMPTION ###
 alc$alc_use <- rowMeans(select(alc, one_of(c("Dalc", "Walc"))))
 #select(lrn14, one_of(strategic_questions))
 alc$alc_use
@@ -80,7 +81,7 @@ alc$Walc
 ## Create logical column 'high_use' which is TRUE for alc_use > 2 ##
 alc <- mutate(alc, high_use = alc_use > 2)
 
-## Glimpse at the data to see that everything is as it should be ##
+#### GLIMPSE AT THE NEW DATASET ####
 glimpse(alc) # 382 observations of 35 variables as expected
 
 #Save the dataset to the data folder

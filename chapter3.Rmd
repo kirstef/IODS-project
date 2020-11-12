@@ -1,8 +1,17 @@
 # Chapter 3: Logistic Regression
 
+## Data wrangling
+
+The data wrangling part is performed in the R-script *create_alc.R* in the data folder and the created dataset is saved as a .csv file ('alc.csv') in the data folder.
+
 ## Data analysis
+
 ### 2. Reading the data and description of the dataset
-For this we have to include the library *dplyr* (```library(dplyr)```) which is a common R library used for data wrangling
+The dataset we want to look at is a joined dataset from two datasets obtained from the following website: https://archive.ics.uci.edu/ml/datasets/Student+Performance , where it is also further described. It studies the performance of secondary education students of two Portuguese schools in mathematics and portuguese. The data sets content are answers of the students to different questions, which concern different areas of working and personal life, social background, circumstance etc. 
+
+Here, in our analysis, we will in particular look at the alcohol consumption and its relation to other variables.
+
+To start the data analysis part, we  include the library *dplyr* (```library(dplyr)```) and read in the dataset.
 ```{r,message=FALSE}
 library(dplyr)
 ```
@@ -10,18 +19,20 @@ library(dplyr)
 alc <- read.csv("./data/alc.csv")
 
 ```
-To get an overview on the dataset, let's print out the names of the variables.
-Description of the data set:
+To get an overview on the dataset, let's print out the names of the variables and get the dimension values.
+The meaning of the values can be found on the above-mentioned website.
 ```{r}
 colnames(alc)
+dim(alc)
 ```
+In total, we have 382 observations and 36 variables in the joined alc dataset.
 
 ### 3. Relation of different values to high/low alcohol consumption
 Choose 4 interesting variables from the data and formulate hypothesis towards their relationship with alcohol consumption
 
-**Hypothesis 1**: *sex*: There is a statistical difference concerning sex: Males are more likely to have a high alcohol consumption.
+**Hypothesis 1**: *sex*: There is a statistical difference concerning sex: Male students are more likely to have a high alcohol consumption than female students.
 
-**Hypothesis 2** *failure*: Number of past class failures has a relation to alcohol consumption.
+**Hypothesis 2** *failure*: The number of past class failures has a relation to alcohol consumption (more failures leading to more alcohol consumption).
 
 **Hypothesis 3** *famrel*: Good family relationships make high alcohol consume less likely.
 
@@ -29,18 +40,21 @@ Choose 4 interesting variables from the data and formulate hypothesis towards th
 
 
 ### 4. Numerical and graphical exploration of chosen variables
-distributions (cross-tabulations, bar plots, box plots), comment on findings, comparison to hypotheses
+With ```gather()``` and ```gplot()``` one can first get an overview bar plot for each variable.
 ```{r}
-#library(tidyr); library(dplyr); library(ggplot2)
+library(tidyr); library(dplyr); library(ggplot2)
 # draw a bar plot of each variable
-#gather(alc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+gather(alc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
 ```
+
+Now we can continue by looking at the values interesting for the hypotheses stated above.
+
 **Hypothesis 1: gender and alcoholic consumption**
 ```{r}
 alc %>% group_by(sex, high_use) %>% summarise(count=n())
 ```
-This is supporting **Hypothesis 1**. Whereas `r (42/198)*100`% of the female students mention a high alcohol consumption, `r (72/184)*100`% 
-of the male students have a high use, which is almost the double value. To look at this graphically, let's look at a bar plot.
+The cross-tabulation is supporting **Hypothesis 1**. Whereas `r (42/198)*100`% of the female students mention a high alcohol consumption, `r (72/184)*100`% 
+of the male students have mentioned a high use, which is almost the double value. To look at this graphically, let's look at a bar plot.
 ```{r}
 library(ggplot2)
 g2 <- ggplot(alc, aes(x = high_use, col=sex))
@@ -56,7 +70,7 @@ alc %>% group_by(failures) %>% summarise(count=n())
 alc %>% group_by(high_use, failures) %>% summarise(count=n())
 alc %>% group_by(high_use, failures>0) %>% summarise(count=n())
 ```
-As one can see, 5 of the `r 268+114` students have experienced 4 failures. From these 5, three report high alcohol consumption. This sample might however be to small to judge if a real relationship exist. Let's look at more 2 or 3 failures and create a bar plot for this. 
+As one can see, 5 of the `r 268+114` students have experienced 4 failures. From these 5, three report high alcohol consumption. This sample might however be to small to judge if a real relationship exist. Let's create a bar and a box plot to investigate further. 
 ```{r}
 
 g3 <- ggplot(alc, aes(x=failures, col=high_use))
@@ -68,7 +82,7 @@ g4 + geom_boxplot()
 
 Looking at the bar plot, one might at least come to the conclusion, that having experienced no failure makes it less likely to become addicted to high alcoholic consumption. However, the sample for having a failure is much less than for having none.
 It might make more sense to combine the numbers for failures > 1 together. Now, a box plot gives a nice visualisation of how having experienced at least 1 failure can impact the alcoholic consumption.
-Again, the impact seems to be much higher for the mail students.
+Again, the impact seems to be much higher for the male students.
 
 **Hypothesis 3 - Family**: 
 ```{r}
@@ -83,7 +97,7 @@ g6 <- ggplot(alc, aes(x=famrel, col=high_use))
 g6 + geom_bar()
 ```
 
-Both the box plot as well as the bar plot seem to at least give a trend on the correctness of the hypothesis: Whereas the mean value for the quality of the family relationships is at 3.5 for people stating a high alcohol consumption, it has a better mean quality (4.5) for students without hinting at alcohol problems. The bar plot gives a bit more clearer view on the diferrent family relationship bins. The high-use fraction is getting more for famrel=2 or 3 than for 4 and 5. For famrel=1 the sample is probably to small to judge.
+Both the box plot as well as the bar plot seem to at least give a trend on the correctness of the hypothesis: Whereas the mean value for the quality of the family relationships is at 3.5 for people stating a high alcohol consumption, it has a better mean quality (4.5) for students without hinting at alcohol problems. The bar plot gives a bit more clearer view on the different family relationship bins. The high-use fraction is getting more for famrel=2 or 3 than for 4 and 5. For famrel=1 the sample is probably to small to be judge.
 
 **Hypothesis 4 - going out**
 ```{r}
@@ -119,7 +133,7 @@ CI <- confint(m) %>% exp
 # print out the odds ratios with their confidence intervals
 cbind(OR, CI)
 ```
-The odds ratios can tell us if having a certain property (e.g. being male, going out often) can be positively or negatively associated with the logical value looked at (here high alcohol consumption). If the OR is > 0, it means it is positively associated, with < 0 it is negatively associated.
+The odds ratios can tell us if having a certain property (e.g. being male, going out often) can be positively or negatively associated with the logical value looked at (here high alcohol consumption). If the OR is > 1, it means it is positively associated, with < 1 it is negatively associated.
 
 The male sex variable has the strongest relationship to the binary target variable, with an odds ratio of +2.45 - that means that the probability for a male student having high alcohol consumption is about 2.5 higher than for a female student. "going out" is also positively associated with high alcohol consumption, wheres "family relation" has a negative relation (high quality of family relation leading more likely to low alcohol consumption). These OR thus support the above-mentioned hypotheses.
 
@@ -174,6 +188,10 @@ loss_func(class = alc$high_use, prob = alc$probability)
 The loss function gives us a value of about 0.21 (as also calculated before), meaning that about 21% of the predictions will be wrong. This value is better than the value in the DataCamp example (about 26%), making this model slightly better.
 
 ### 7. Bonus: 10-fold cross-validation
-
-
-### 8. Super-Bonus
+To study the test set performance of the model one can use K-fold cross-validation. Here, we will try out 10-fold cross-validation, making use of the loss function defined above.
+```{r}
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m2, K=10)
+cv$delta[1] 
+```
+The cv.glm function of the library ```boot``` can be used for this and ```K=10``` defines the number of subsets we are doing the cross-validation on. The ```delta``` attribute stores the error value. It gives an error of about 0.23 which is better than the 0.26 error of the DataCamp model. Thus, it has a bit better performance.
