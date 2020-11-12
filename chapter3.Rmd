@@ -106,7 +106,7 @@ Again, the numeric cross tabulations as well as the plots are supporting the hyp
 m <- glm(high_use ~ sex + failures + famrel + goout, data = alc, family = "binomial")
 summary(m)
 ```
-The model summary shows a high significance for the correlation to *sex* and *goout*, a medium significance for *famrel* und no signifant value for *failure*. One could fit the model again, dropping at least the *failure* variable. But first let's study the odds ratios.
+The model summary shows a high significance for the correlation to *sexM* and *goout*, a medium significance for *famrel* und no signifant value for *failure*. One could fit the model again, dropping at least the *failure* variable. But first let's study the odds ratios (OR).
 ```{r}
 coef(m)
 
@@ -119,9 +119,33 @@ CI <- confint(m) %>% exp
 # print out the odds ratios with their confidence intervals
 cbind(OR, CI)
 ```
+The odds ratios can tell us if having a certain property (e.g. being male, going out often) can be positively or negatively associated with the logical value looked at (here high alcohol consumption). If the OR is > 0, it means it is positively associated, with < 0 it is negatively associated.
+
+The male sex variable has the strongest relationship to the binary target variable, with an odds ratio of +2.45 - that means that the probability for a male student having high alcohol consumption is about 2.5 higher than for a female student. "going out" is also positively associated with high alcohol consumption, wheres "family relation" has a negative relation (high quality of family relation leading more likely to low alcohol consumption). These OR thus support the above-mentioned hypotheses.
+
 
 ### 6. Predictive power of Model
+As *failures* didn't have a significant relationship according to my logistic regression model, I will drop this variable and fit the model again, print out the summary and calculate the OR and Confidence levels:
 
+```{r}
+m2 <- glm(high_use ~ sex + famrel + goout, data = alc, family = "binomial")
+summary(m2)
+coef(m2)
+OR <- coef(m2) %>% exp
+CI <- confint(m2) %>% exp
+cbind(OR, CI)
+```
+As a next step let's check the predictive power of the new model, adding the new columns *probability* and *predictions* to the *alc* dataset. *probablities* will be calculated by using the ```predict()``` function on the model and *predictions* will defined as TRUE if the probability is higher than 50%.
+```{r}
+probabilities <- predict(m2, type = "response")
+alc <- mutate(alc, probability = probabilities)
+alc <- mutate(alc, prediction = probabilities > 0.5)
+```
+To see an example on how good the model is, we can print the first rows of the columns we are interested in and look at the confusion matrix:
+```{r}
+select(alc, sex, famrel, goout,  high_use, probability, prediction) %>% tail(10)
+table(high_use = alc$high_use, prediction = alc$prediction)
+```
 
 ### 7. Bonus: 10-fold cross-validation
 

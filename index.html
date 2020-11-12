@@ -458,7 +458,7 @@ summary {
 
 today &lt;- date()
 paste(&quot;Today is&quot;, today, &quot;. Hello R! Hello world!&quot;)</code></pre>
-<pre><code>## [1] &quot;Today is Thu Nov 12 15:29:06 2020 . Hello R! Hello world!&quot;</code></pre>
+<pre><code>## [1] &quot;Today is Thu Nov 12 22:02:29 2020 . Hello R! Hello world!&quot;</code></pre>
 <div id="my-background-and-expectations" class="section level3">
 <h3>My background and expectations</h3>
 <p><strong>How I found out about this course</strong>: I already came across this course last year (unfortunately didn’t have the time to participate) and was already intrigued about the contents and impressed by the fabulous feedback.</p>
@@ -875,7 +875,7 @@ summary(m)</code></pre>
 ## AIC: 401.08
 ## 
 ## Number of Fisher Scoring iterations: 4</code></pre>
-<p>The model summary shows a high significance for the correlation to <em>sex</em> and <em>goout</em>, a medium significance for <em>famrel</em> und no signifant value for <em>failure</em>. One could fit the model again, dropping at least the <em>failure</em> variable. But first let’s study the odds ratios.</p>
+<p>The model summary shows a high significance for the correlation to <em>sexM</em> and <em>goout</em>, a medium significance for <em>famrel</em> und no signifant value for <em>failure</em>. One could fit the model again, dropping at least the <em>failure</em> variable. But first let’s study the odds ratios (OR).</p>
 <pre class="r"><code>coef(m)</code></pre>
 <pre><code>## (Intercept)        sexM    failures      famrel       goout 
 ##  -2.3922069   0.8976484   0.3338923  -0.3971296   0.7751449</code></pre>
@@ -893,9 +893,73 @@ cbind(OR, CI)</code></pre>
 ## failures    1.39639281 0.93864152 2.0963627
 ## famrel      0.67224693 0.51012773 0.8814055
 ## goout       2.17090677 1.72124671 2.7771652</code></pre>
+<p>The odds ratios can tell us if having a certain property (e.g. being male, going out often) can be positively or negatively associated with the logical value looked at (here high alcohol consumption). If the OR is &gt; 0, it means it is positively associated, with &lt; 0 it is negatively associated.</p>
+<p>The male sex variable has the strongest relationship to the binary target variable, with an odds ratio of +2.45 - that means that the probability for a male student having high alcohol consumption is about 2.5 higher than for a female student. “going out” is also positively associated with high alcohol consumption, wheres “family relation” has a negative relation (high quality of family relation leading more likely to low alcohol consumption). These OR thus support the above-mentioned hypotheses.</p>
 </div>
 <div id="predictive-power-of-model" class="section level3">
 <h3>6. Predictive power of Model</h3>
+<p>As <em>failures</em> didn’t have a significant relationship according to my logistic regression model, I will drop this variable and fit the model again, print out the summary and calculate the OR and Confidence levels:</p>
+<pre class="r"><code>m2 &lt;- glm(high_use ~ sex + famrel + goout, data = alc, family = &quot;binomial&quot;)
+summary(m2)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = high_use ~ sex + famrel + goout, family = &quot;binomial&quot;, 
+##     data = alc)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.5836  -0.7707  -0.5316   0.8198   2.5474  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  -2.3550     0.6414  -3.672 0.000241 ***
+## sexM          0.9342     0.2514   3.716 0.000202 ***
+## famrel       -0.4118     0.1387  -2.969 0.002989 ** 
+## goout         0.7971     0.1214   6.565  5.2e-11 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 465.68  on 381  degrees of freedom
+## Residual deviance: 393.80  on 378  degrees of freedom
+## AIC: 401.8
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>coef(m2)</code></pre>
+<pre><code>## (Intercept)        sexM      famrel       goout 
+##  -2.3549669   0.9341541  -0.4117517   0.7971166</code></pre>
+<pre class="r"><code>OR &lt;- coef(m2) %&gt;% exp
+CI &lt;- confint(m2) %&gt;% exp</code></pre>
+<pre><code>## Waiting for profiling to be done...</code></pre>
+<pre class="r"><code>cbind(OR, CI)</code></pre>
+<pre><code>##                     OR      2.5 %    97.5 %
+## (Intercept) 0.09489664 0.02602013 0.3241397
+## sexM        2.54505957 1.56349803 4.1969640
+## famrel      0.66248876 0.50299888 0.8679153
+## goout       2.21913298 1.76086023 2.8372779</code></pre>
+<p>As a next step let’s check the predictive power of the new model, adding the new columns <em>probability</em> and <em>predictions</em> to the <em>alc</em> dataset. <em>probablities</em> will be calculated by using the <code>predict()</code> function on the model and <em>predictions</em> will defined as TRUE if the probability is higher than 50%.</p>
+<pre class="r"><code>probabilities &lt;- predict(m2, type = &quot;response&quot;)
+alc &lt;- mutate(alc, probability = probabilities)
+alc &lt;- mutate(alc, prediction = probabilities &gt; 0.5)</code></pre>
+<p>To see an example on how good the model is, we can print the first rows of the columns we are interested in and look at the confusion matrix:</p>
+<pre class="r"><code>select(alc, sex, famrel, goout,  high_use, probability, prediction) %&gt;% tail(10)</code></pre>
+<pre><code>##     sex famrel goout high_use probability prediction
+## 373   M      4     2    FALSE  0.18639810      FALSE
+## 374   M      5     3     TRUE  0.25195331      FALSE
+## 375   F      5     3    FALSE  0.11687357      FALSE
+## 376   F      4     3    FALSE  0.16650200      FALSE
+## 377   F      5     2    FALSE  0.05627990      FALSE
+## 378   F      4     4    FALSE  0.30714360      FALSE
+## 379   F      2     2    FALSE  0.17019623      FALSE
+## 380   F      1     1    FALSE  0.12243164      FALSE
+## 381   M      2     5     TRUE  0.85084788       TRUE
+## 382   M      4     1     TRUE  0.09357856      FALSE</code></pre>
+<pre class="r"><code>table(high_use = alc$high_use, prediction = alc$prediction)</code></pre>
+<pre><code>##         prediction
+## high_use FALSE TRUE
+##    FALSE   250   18
+##    TRUE     63   51</code></pre>
 </div>
 <div id="bonus-10-fold-cross-validation" class="section level3">
 <h3>7. Bonus: 10-fold cross-validation</h3>
