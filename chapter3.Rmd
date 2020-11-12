@@ -35,7 +35,7 @@ distributions (cross-tabulations, bar plots, box plots), comment on findings, co
 # draw a bar plot of each variable
 #gather(alc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
 ```
-
+**Hypothesis 1: gender and alcoholic consumption**
 ```{r}
 alc %>% group_by(sex, high_use) %>% summarise(count=n())
 ```
@@ -49,7 +49,7 @@ g2 + geom_bar()
 
 The bar plot shows quite clearly, that the difference between high-use and no high-use are quite different for male and female students.
 
-**Hypothesis 2**: Let's now investigate if one can see a clear relation between the failures and the alcohol consumption.
+**Hypothesis 2 - failures**: Let's now investigate if one can see a clear relation between the failures and the alcohol consumption.
 ```{r}
 alc %>% group_by(high_use) %>% summarise(count=n())
 alc %>% group_by(failures) %>% summarise(count=n())
@@ -70,6 +70,35 @@ Looking at the bar plot, one might at least come to the conclusion, that having 
 It might make more sense to combine the numbers for failures > 1 together. Now, a box plot gives a nice visualisation of how having experienced at least 1 failure can impact the alcoholic consumption.
 Again, the impact seems to be much higher for the mail students.
 
+**Hypothesis 3 - Family**: 
+```{r}
+alc %>% group_by(famrel,high_use) %>% summarise(count=n())
+```
+
+```{r}
+g5 <- ggplot(alc, aes(x = high_use, y = famrel))
+g5 + geom_boxplot() + ylab("quality of family relationships (from 1 - very bad to 5 - excellent)")
+
+g6 <- ggplot(alc, aes(x=famrel, col=high_use))
+g6 + geom_bar()
+```
+
+Both the box plot as well as the bar plot seem to at least give a trend on the correctness of the hypothesis: Whereas the mean value for the quality of the family relationships is at 3.5 for people stating a high alcohol consumption, it has a better mean quality (4.5) for students without hinting at alcohol problems. The bar plot gives a bit more clearer view on the diferrent family relationship bins. The high-use fraction is getting more for famrel=2 or 3 than for 4 and 5. For famrel=1 the sample is probably to small to judge.
+
+**Hypothesis 4 - going out**
+```{r}
+alc %>% group_by(goout,high_use) %>% summarise(count=n())
+```
+
+```{r}
+g7 <- ggplot(alc, aes(x = high_use, y = goout, col=sex))
+g7 + geom_boxplot() + ylab("going out with friends (from 1 [very low] to 5 [very high]")
+
+g8 <- ggplot(alc, aes(x=goout, col=high_use))
+g8 + geom_bar()
+```
+
+Again, the numeric cross tabulations as well as the plots are supporting the hypothesis. Going out with friends more often (higher value) seems to have an impact on the alcohol consumption.
 
 ### 5. Logistic regression
 
