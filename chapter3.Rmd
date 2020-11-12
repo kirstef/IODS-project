@@ -1,0 +1,82 @@
+# Chapter 3: Logistic Regression
+
+## Data analysis
+### 2. Reading the data and description of the dataset
+For this we have to include the library *dplyr* (```library(dplyr)```) which is a common R library used for data wrangling
+```{r,message=FALSE}
+library(dplyr)
+```
+```{r}
+alc <- read.csv("./data/alc.csv")
+
+```
+To get an overview on the dataset, let's print out the names of the variables.
+Description of the data set:
+```{r}
+colnames(alc)
+```
+
+### 3. Relation of different values to high/low alcohol consumption
+Choose 4 interesting variables from the data and formulate hypothesis towards their relationship with alcohol consumption
+
+**Hypothesis 1**: *sex*: There is a statistical difference concerning sex: Males are more likely to have a high alcohol consumption.
+
+**Hypothesis 2** *failure*: Number of past class failures has a relation to alcohol consumption.
+
+**Hypothesis 3** *famrel*: Good family relationships make high alcohol consume less likely.
+
+**Hypothesis 4** *goout*: The frequency of going out with friends will affect the alcohol consumption.
+
+
+### 4. Numerical and graphical exploration of chosen variables
+distributions (cross-tabulations, bar plots, box plots), comment on findings, comparison to hypotheses
+```{r}
+#library(tidyr); library(dplyr); library(ggplot2)
+# draw a bar plot of each variable
+#gather(alc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+```
+
+```{r}
+alc %>% group_by(sex, high_use) %>% summarise(count=n())
+```
+This is supporting **Hypothesis 1**. Whereas `r (42/198)*100`% of the female students mention a high alcohol consumption, `r (72/184)*100`% 
+of the male students have a high use, which is almost the double value. To look at this graphically, let's look at a bar plot.
+```{r}
+library(ggplot2)
+g2 <- ggplot(alc, aes(x = high_use, col=sex))
+g2 + geom_bar()
+```
+
+The bar plot shows quite clearly, that the difference between high-use and no high-use are quite different for male and female students.
+
+**Hypothesis 2**: Let's now investigate if one can see a clear relation between the failures and the alcohol consumption.
+```{r}
+alc %>% group_by(high_use) %>% summarise(count=n())
+alc %>% group_by(failures) %>% summarise(count=n())
+alc %>% group_by(high_use, failures) %>% summarise(count=n())
+alc %>% group_by(high_use, failures>0) %>% summarise(count=n())
+```
+As one can see, 5 of the `r 268+114` students have experienced 4 failures. From these 5, three report high alcohol consumption. This sample might however be to small to judge if a real relationship exist. Let's look at more 2 or 3 failures and create a bar plot for this. 
+```{r}
+
+g3 <- ggplot(alc, aes(x=failures, col=high_use))
+g3 + geom_bar()
+
+g4 <- ggplot(alc, aes(x = sex, y = alc_use, col=failures>0))
+g4 + geom_boxplot()
+```
+
+Looking at the bar plot, one might at least come to the conclusion, that having experienced no failure makes it less likely to become addicted to high alcoholic consumption. However, the sample for having a failure is much less as for having none.
+
+
+
+### 5. Logistic regression
+
+
+### 6. Predictive power of Model
+
+
+### 7. Bonus: 10-fold cross-validation
+
+
+### 8. Super-Bonus
