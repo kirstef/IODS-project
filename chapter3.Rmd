@@ -66,8 +66,9 @@ g4 <- ggplot(alc, aes(x = sex, y = alc_use, col=failures>0))
 g4 + geom_boxplot()
 ```
 
-Looking at the bar plot, one might at least come to the conclusion, that having experienced no failure makes it less likely to become addicted to high alcoholic consumption. However, the sample for having a failure is much less as for having none.
-
+Looking at the bar plot, one might at least come to the conclusion, that having experienced no failure makes it less likely to become addicted to high alcoholic consumption. However, the sample for having a failure is much less than for having none.
+It might make more sense to combine the numbers for failures > 1 together. Now, a box plot gives a nice visualisation of how having experienced at least 1 failure can impact the alcoholic consumption.
+Again, the impact seems to be much higher for the mail students.
 
 
 ### 5. Logistic regression
