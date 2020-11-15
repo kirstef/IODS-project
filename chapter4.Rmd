@@ -1,0 +1,77 @@
+# Chapter 4: Clustering and classification
+
+### 1-2. First look at the Boston dataset
+
+This chapter is focused on clustering and classification and the *Boston* dataset will be the foundation for this. The dataset is already included in the *MASS* package so it can be loaded directly.
+```{r}
+library(MASS)
+data("Boston")
+```
+
+To get a hinch on what dataset we are dealing with, let's look at its dimensions (```dim(Boston)```) and structure (```str(Boston)```) .
+```{r, echo=FALSE}
+dim(Boston)
+str(Boston)
+```
+
+The dataset is made up of 506 observations and 14 variables, describing the housing values in suburbs of Boston. Two of the variables (*chas* and *rad*) are integer type, the other numeric. Further information can be found at *https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html*.
+**Describe a bit more?**
+
+### 3. Graphical overview of the data and variable summaries
+
+*"Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them."*
+
+Let's see if a ```pairs()`` plot can show us some interesting things:
+```{r, echo=FALSE}
+pairs(Boston)
+```
+
+A summary (```summary(Boston)```) can give us more insight:
+```{r, echo=FALSE}
+summary(Boston)
+```
+
+Both the pairs plot and the summary are not easy to interpret just by a first glance. Another option is to make use of a *correlation plot* - thus to graphically print the correlation between the different variables.
+```{r, message=FALSE}
+library(corrplot)
+library(tidyverse)
+cor_matrix <- cor(Boston) %>% round(digits=2)
+corrplot(cor_matrix, method="circle", cl.pos="b")
+```
+
+In this plot we can nicely see, which variables are correlated the most by looking at the colours/diameters of the circles. For example those circles with a darker shade of blue have a correlation value close to 1 and one can compare with the *pairs plot* above and see that they have a linear tendency (e.g. *nox* and *indus* - denoting "nitrogen oxides concentration" and "proportion of non-retail business acres per town"). Then there are those variables which relationship to each other is visualised by a very small and nearly white circle, and those are the once with no significant relationship (e.g. *rm* and *black* - "average number of rooms per dwelling" vs. a value of black population in the town), which is also visible in the pair plot.
+
+
+### 4. Scaling the data, crime rate, preparing train and test sets
+
+*"Standardize the dataset and print out summaries of the scaled data. How did the variables change? Create a categorical variable of the crime rate in the Boston dataset (from the scaled crime rate). Use the quantiles as the break points in the categorical variable. Drop the old crime rate variable from the dataset. Divide the dataset to train and test sets, so that 80% of the data belongs to the train set."*
+
+**Scaling the data**
+
+```{r}
+boston_scaled <- scale(Boston)
+summary(boston_scaled)
+boston_scaled <- as.data.frame(boston_scaled) # save data in a dataframe
+head(boston_scaled)
+```
+
+One can see that as a result to the scaling the values are now distributed around a mean value of 1, running thus from negative to positive.
+
+**Categorical variable for the crime rate**
+
+```{r}
+# summary of the scaled crime rate
+summary(boston_scaled$crim)
+# create a quantile vector of crim and print it
+bins <- quantile(boston_scaled$crim)
+# create a categorical variable 'crime'
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label=c("low","med_low", "med_high", "high"))
+```
+
+```{r}
+# remove original crim from the dataset
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+
+# add the new categorical value to scaled data
+boston_scaled <- data.frame(boston_scaled, crime)
+```
