@@ -170,6 +170,7 @@ library(MASS)
 data('Boston')
 
 boston_scaled2 <- scale(Boston)
+boston_scaled2 <- as.data.frame(boston_scaled2) # save data in a dataframe
 ```
 
 **Distances**
@@ -184,34 +185,34 @@ summary(dist_eu)
 
 **K-Means clustering**
 
-Let's do K-Means clustering on the dataset, starting with 4 as a first try for the number of cluster centers. The results can be looked at with pairs.
+Let's do K-Means clustering on the scaled dataset, starting with 4 as a first try for the number of cluster centers. The results can be looked at with pairs.
 
 ```{r}
-km <-kmeans(Boston, centers = 4)
-pairs(Boston, col = km$cluster)
+km <-kmeans(boston_scaled2, centers = 4)
+pairs(boston_scaled2, col = km$cluster)
 ```
 
 As it is difficult to read anything in the total pairs plot, let's divide it into 4 parts:
 
 ```{r}
-pairs(Boston[1:4], col = km$cluster)
-pairs(Boston[5:8], col = km$cluster)
-pairs(Boston[9:11], col = km$cluster)
-pairs(Boston[12:14], col = km$cluster)
+pairs(boston_scaled2[1:4], col = km$cluster)
+pairs(boston_scaled2[5:8], col = km$cluster)
+pairs(boston_scaled2[9:11], col = km$cluster)
+pairs(boston_scaled2[12:14], col = km$cluster)
 ```
 
 I will stick to the [5:8] part of the dataset and investigate how the number of clusters (2,3,5) will change the result of the initial number of 4 clusters.
 
 ```{r}
 
-km <-kmeans(Boston, centers = 2)
-pairs(Boston[5:8], col = km$cluster)
+km <-kmeans(boston_scaled2, centers = 2)
+pairs(boston_scaled2[5:8], col = km$cluster)
 
-km <-kmeans(Boston, centers = 3)
-pairs(Boston[5:8], col = km$cluster)
+km <-kmeans(boston_scaled2, centers = 3)
+pairs(boston_scaled2[5:8], col = km$cluster)
 
-km <-kmeans(Boston, centers = 5)
-pairs(Boston[5:8], col = km$cluster)
+km <-kmeans(boston_scaled2, centers = 5)
+pairs(boston_scaled2[5:8], col = km$cluster)
 ```
 
 It seems to be difficult to decide which number of clusters is the best. One can use the *total of within cluster sum of squares* (WCSS) to help with the decision. The optimal number of clusters can be seen as the point when the total WCSS is dropping radically. Let's investigate the behaviour of the total WCSS from 1 cluster to 10 clusters.
@@ -230,6 +231,6 @@ The total WCSS is falling steeply until ~2 clusters, afterwards a bit less and b
 Let's rerun the K-means clustering with 2 for the whole dataset.
 
 ```{r}
-km <-kmeans(Boston, centers = 2)
-pairs(Boston, col = km$cluster)
+km <-kmeans(boston_scaled2, centers = 2)
+pairs(boston_scaled2, col = km$cluster)
 ```
