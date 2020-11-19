@@ -2,24 +2,21 @@
 
 ### 1-2. First look at the Boston dataset
 
-This chapter is focused on clustering and classification and the *Boston* dataset will be the foundation for this. The dataset is already included in the *MASS* package so it can be loaded directly.
-```{r}
+This chapter is focused on clustering and classification and the *Boston* dataset will be the dataset to be explored. The dataset is already included in the internal *MASS* package so it can be loaded directly.
+```{r, echo=FALSE}
 library(MASS)
 data("Boston")
 ```
 
-To get a hinch on what dataset we are dealing with, let's look at its dimensions (```dim(Boston)```) and structure (```str(Boston)```) .
+To get a first impression on what dataset we are dealing with, let's look at its dimensions (```dim(Boston)```) and structure (```str(Boston)```) .
 ```{r, echo=FALSE}
 dim(Boston)
 str(Boston)
 ```
 
-The dataset is made up of 506 observations and 14 variables, describing the housing values in suburbs of Boston. Two of the variables (*chas* and *rad*) are integer type, the other numeric. Further information can be found at *https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html*.
-**Describe a bit more?**
+The dataset is made up of 506 observations and 14 variables, describing the housing values in suburbs of Boston, including variables such as the *per capita crime rate by town* (crim), *proportion of non-retail business acres per town* (indus), *nitrogen oxides concentration* (nox), *average number of rooms per dewelling* (rm). Two of the variables (*chas- Charles River dummy variable* and *rad - index of accessibility to radial highways*) are integer type, the other numeric. Further information and the definitions for the different variables can be found at *https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html*.
 
 ### 3. Graphical overview of the data and variable summaries
-
-*"Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them."*
 
 Let's see if a ```pairs()`` plot can show us some interesting things:
 ```{r, echo=FALSE}
@@ -36,30 +33,33 @@ Both the pairs plot and the summary are not easy to interpret just by a first gl
 library(corrplot)
 library(tidyverse)
 cor_matrix <- cor(Boston) %>% round(digits=2)
-corrplot(cor_matrix, method="circle", cl.pos="b")
+corrplot.mixed(cor_matrix, number.cex = .7)
 ```
 
-In this plot we can nicely see, which variables are correlated the most by looking at the colours/diameters of the circles. For example those circles with a darker shade of blue have a correlation value close to 1 and one can compare with the *pairs plot* above and see that they have a linear tendency (e.g. *nox* and *indus* - denoting "nitrogen oxides concentration" and "proportion of non-retail business acres per town"). Then there are those variables which relationship to each other is visualised by a very small and nearly white circle, and those are the once with no significant relationship (e.g. *rm* and *black* - "average number of rooms per dwelling" vs. a value of black population in the town), which is also visible in the pair plot.
+In this plot we can nicely see, which variables are correlated the most by looking at the colours/diameters of the circles. For example those circles with a darker shade of blue have a correlation value close to 1 and one can compare with the *pairs plot* above and see that they have a linear tendency (e.g. *nox* and *indus* - denoting "nitrogen oxides concentration" and "proportion of non-retail business acres per town"). Then there are those variables which relationship to each other is visualised by a very small and nearly white circle, and those are the once with no significant relationship (e.g. *rm* and *black* - "average number of rooms per dwelling" vs. a value of black population in the town), which is also visible in the pair plot. Plotting the correlation plot furthermore as ```corrplot.mixed``` provides us additionally with the numerical correlation values.
 
 
 ### 4. Scaling the data, crime rate, preparing train and test sets
 
-*"Standardize the dataset and print out summaries of the scaled data. How did the variables change? Create a categorical variable of the crime rate in the Boston dataset (from the scaled crime rate). Use the quantiles as the break points in the categorical variable. Drop the old crime rate variable from the dataset. Divide the dataset to train and test sets, so that 80% of the data belongs to the train set."*
-
 **Scaling the data**
 
+To scale the data the ```scale()``` function can be used on the Boston dataset. Below a summary of the scaled data: 
 ```{r}
 boston_scaled <- scale(Boston)
 summary(boston_scaled)
+```
+
+One can see that as a result to the scaling the values are now distributed around a mean value of 1, running thus from negative to positive.
+For further investigation we save the scaled data as well in the dataframe format and look at the first six lines:
+```{r}
 boston_scaled <- as.data.frame(boston_scaled) # save data in a dataframe
 head(boston_scaled)
 ```
 
-One can see that as a result to the scaling the values are now distributed around a mean value of 1, running thus from negative to positive.
 
 **Categorical variable for the crime rate**
 
-The "per capita crime rate by town" can be found in the dataset in the continuous variable "crim". This continuos variable should now be changed into a categorical one, using quantiles as break boints.
+The *per capita crime rate by town* can be found in the dataset in the continuous variable *crim*. This continuos variable should now be changed into a categorical one, using quantiles as break boints.
 Let's look at the quantiles first with ```summary(boston_scaled$crim)``` and then define our bins:
 ```{r,echo=FALSE}
 summary(boston_scaled$crim)
@@ -84,7 +84,7 @@ boston_scaled <- data.frame(boston_scaled, crime)
 
 **Divide the data set into training and test sets**
 
-To divide the dataset into training and test sets we first need to know the length of the set, which we can do by using ```nrow()```. A common partition is to use 80% of the data for training and 20% for testing, which we will do here. With ```sample()`` we can randomly choose a percentage of the given numbers and store them in a variable. Then we can build our train and test set with the randomly chosen rows. 
+To divide the dataset into training and test sets we first need to know the length of the set, which we can do by using ```nrow()```. A common partition is to use 80% of the data for training and 20% for testing, which we will do here. With ```sample()``` we can randomly choose a percentage of the given numbers and store them in a variable. Then we can build our train and test set with the randomly chosen rows. 
 ```{r}
 n <- nrow(boston_scaled)
 ind <- sample(n,  size = n * 0.8)
@@ -92,7 +92,7 @@ train <- boston_scaled[ind,]
 test <- boston_scaled[-ind,]
 ```
 
-A table overview on the crime categories of the train and test gives us a first view on the distribution of the different groups.
+A table overview on the crime categories of the train and test sets gives us a first insight into the distribution amongst the different categories.
 ```{r}
 traincrime <- table(train$crime)
 testcrime <- table(test$crime)
@@ -102,21 +102,19 @@ testcrime
 
 ### 5. Linear Discriminant Analysis
 
-*"Fit the linear discriminant analysis on the train set. Use the categorical crime rate as the target variable and all the other variables in the dataset as predictor variables. Draw the LDA (bi)plot."*
-
 **LDA Fit on the crime training set**
 
-Linear Discriminant Analysis can be used as a classification method to fine a linear combination of the variables in relation to the target variable classes. It is fir with the function ```lda()``` and takes as an input a function (e.g. target ~ x1 + x2 ...) and the dataset. ```target ~ .``` means that all other variables in the dataset are used as predictors.
+Linear Discriminant Analysis can be used as a classification method to find a linear combination of the variables in relation to the target variable classes. It is fit with the function ```lda()``` and takes as an input a function (e.g. target ~ x1 + x2 ...) and the dataset. ```target ~ .``` means that all other variables in the dataset are used as predictors.
 ```{r}
 lda.fit <- lda(crime ~ ., data = train)
 lda.fit
 ```
 
-The print of the fit shows us the result of the LDA fit on the train set, with the output showing us the three extracted discriminant functions LD1, LD2 and LD3 with the highest value being 0.94 for LD1. We get three discriminant values as we have four different groups ("low","med_low", "med_high", "high") and discrimants are always one less than the number of groups.
+The print of the fit shows us the result of the LDA fit on the train set, with the output showing us the three extracted discriminant functions LD1, LD2 and LD3 with the highest value being 0.94 for LD1. We get three discriminant values as we have four different groups ("low","med_low", "med_high", "high") and discrinants are always one less than the number of groups.
 
 **LDA (bi)plot**
 
-For the LDA biplot a function has to be created to show the lda arrows for the different variable in the plot. The code for this function was taken from the datacamp exercise which refers to following [Stack Overflow message thread](https://stackoverflow.com/questions/17232251/how-can-i-plot-a-biplot-for-lda-in-r). 
+For the LDA biplot a function has to be created to show as well the lda arrows for the different variables in the plot. The code for this function was taken from the datacamp exercise which refers to following [Stack Overflow message thread](https://stackoverflow.com/questions/17232251/how-can-i-plot-a-biplot-for-lda-in-r). 
 Then the classes are stored in a numeric vector and plotted, together with the arrows, in a LDA (bi)plot.
 ```{r}
 lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
@@ -135,10 +133,9 @@ lda.arrows(lda.fit, myscale = 1)
 ```
 
 
-From the plot we can see that the discriminant LD1 was hugely imfluenced by the variable *rad*. Looking at the definition for *rad* ("index of accessibility to radial highways"), it seems that the accessibility to radial highways as a predictor plays a role in being placed into the *high* category.
+From the plot we can see that the variable *rad* has a major contribution to LD1. Looking at the definition for *rad* ("index of accessibility to radial highways"), it seems that the accessibility to radial highways as a predictor enlargens the probability of being placed into the *high* category.
 
 ### 6. Predictions on the test data
-*"Save the crime categories from the test set and then remove the categorical crime variable from the test dataset. Then predict the classes with the LDA model on the test data. Cross tabulate the results with the crime categories from the test set. Comment on the results."*
 
 Before going to the next step, let's save the crime categories from the test set in *correct_classes* and the remove *crime* from the test dataset.
 ```{r}
@@ -158,11 +155,11 @@ A cross-tabulation with the original crime values (stored in *correct_classes*) 
 table(correct = correct_classes, predicted = lda.pred$class)
 ```
 
-Looking at the cross-tabulation one can see that for this data set the *high* prediction is perfect, the *med-high* classification quite good, but for the lower categories *low* and *high* the model could be improved.
+Looking at the cross-tabulation one can see that for this data set the *high* prediction is almost perfect, the *med-high* classification quite good, but for the lower categories *low* and *high* the model could be improved.
 
 ### 7. Distances, K-Means and visualization of the clusters
 
-Reload the Boston dataset and scale it to standardize the data, before comparing the distances.
+First, let's reload the Boston dataset and scale it to standardize the data, before comparing the distances.
 
 ```{r}
 # load MASS and Boston
@@ -175,7 +172,7 @@ boston_scaled2 <- as.data.frame(boston_scaled2) # save data in a dataframe
 
 **Distances**
 
-Without specifying the method as an attribute in the dist function, the euclidian distance is calculated. The method can be changed, e.g. to ```method="manhattan"``` which will than have different results.
+Without specifying the method as an attribute in the ```dist(0```) function, the *euclidian distance* is calculated. The method can be changed, e.g. to ```method="manhattan"``` which will then have different results.
 
 ```{r}
 dist_eu <- dist(boston_scaled2)
@@ -192,7 +189,7 @@ km <-kmeans(boston_scaled2, centers = 4)
 pairs(boston_scaled2, col = km$cluster)
 ```
 
-As it is difficult to read anything in the total pairs plot, let's divide it into 4 parts:
+As it is difficult to read anything in the total pairs plot, let's divide it exemplarily into 4 parts:
 
 ```{r}
 pairs(boston_scaled2[1:4], col = km$cluster)
