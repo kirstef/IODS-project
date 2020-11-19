@@ -59,19 +59,177 @@ One can see that as a result to the scaling the values are now distributed aroun
 
 **Categorical variable for the crime rate**
 
-```{r}
-# summary of the scaled crime rate
+The "per capita crime rate by town" can be found in the dataset in the continuous variable "crim". This continuos variable should now be changed into a categorical one, using quantiles as break boints.
+Let's look at the quantiles first with ```summary(boston_scaled$crim)``` and then define our bins:
+```{r,echo=FALSE}
 summary(boston_scaled$crim)
-# create a quantile vector of crim and print it
-bins <- quantile(boston_scaled$crim)
-# create a categorical variable 'crime'
-crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label=c("low","med_low", "med_high", "high"))
 ```
 
 ```{r}
-# remove original crim from the dataset
-boston_scaled <- dplyr::select(boston_scaled, -crim)
+bins <- quantile(boston_scaled$crim)
+```
 
-# add the new categorical value to scaled data
+The new factor variable *crime* will hold the crime data, categorized by "low", "med_low", "med_high" and "high".
+```{r}
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label=c("low","med_low", "med_high", "high"))
+table(crime)
+```
+
+Instead of the old *crim* variable, let's now add the new *crime* variable to the *boston_scaled* dataframe and drop the old variable *crim*.
+```{r}
+
+boston_scaled <- dplyr::select(boston_scaled, -crim)
 boston_scaled <- data.frame(boston_scaled, crime)
+```
+
+**Divide the data set into training and test sets**
+
+To divide the dataset into training and test sets we first need to know the length of the set, which we can do by using ```nrow()```. A common partition is to use 80% of the data for training and 20% for testing, which we will do here. With ```sample()`` we can randomly choose a percentage of the given numbers and store them in a variable. Then we can build our train and test set with the randomly chosen rows. 
+```{r}
+n <- nrow(boston_scaled)
+ind <- sample(n,  size = n * 0.8)
+train <- boston_scaled[ind,]
+test <- boston_scaled[-ind,]
+```
+
+A table overview on the crime categories of the train and test gives us a first view on the distribution of the different groups.
+```{r}
+traincrime <- table(train$crime)
+testcrime <- table(test$crime)
+traincrime
+testcrime
+```
+
+### 5. Linear Discriminant Analysis
+
+*"Fit the linear discriminant analysis on the train set. Use the categorical crime rate as the target variable and all the other variables in the dataset as predictor variables. Draw the LDA (bi)plot."*
+
+**LDA Fit on the crime training set**
+
+Linear Discriminant Analysis can be used as a classification method to fine a linear combination of the variables in relation to the target variable classes. It is fir with the function ```lda()``` and takes as an input a function (e.g. target ~ x1 + x2 ...) and the dataset. ```target ~ .``` means that all other variables in the dataset are used as predictors.
+```{r}
+lda.fit <- lda(crime ~ ., data = train)
+lda.fit
+```
+
+The print of the fit shows us the result of the LDA fit on the train set, with the output showing us the three extracted discriminant functions LD1, LD2 and LD3 with the highest value being 0.94 for LD1. We get three discriminant values as we have four different groups ("low","med_low", "med_high", "high") and discrimants are always one less than the number of groups.
+
+**LDA (bi)plot**
+
+For the LDA biplot a function has to be created to show the lda arrows for the different variable in the plot. The code for this function was taken from the datacamp exercise which refers to following [Stack Overflow message thread](https://stackoverflow.com/questions/17232251/how-can-i-plot-a-biplot-for-lda-in-r). 
+Then the classes are stored in a numeric vector and plotted, together with the arrows, in a LDA (bi)plot.
+```{r}
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+classes <- as.numeric(train$crime)
+plot(lda.fit, dimen = 2,col=classes, pch=classes)
+lda.arrows(lda.fit, myscale = 1)
+
+```
+
+
+From the plot we can see that the discriminant LD1 was hugely imfluenced by the variable *rad*. Looking at the definition for *rad* ("index of accessibility to radial highways"), it seems that the accessibility to radial highways as a predictor plays a role in being placed into the *high* category.
+
+### 6. Predictions on the test data
+*"Save the crime categories from the test set and then remove the categorical crime variable from the test dataset. Then predict the classes with the LDA model on the test data. Cross tabulate the results with the crime categories from the test set. Comment on the results."*
+
+Before going to the next step, let's save the crime categories from the test set in *correct_classes* and the remove *crime* from the test dataset.
+```{r}
+correct_classes <- test$crime
+test <- dplyr::select(test, -crime)
+```
+
+Now the lda.fit model can be used to predict the crime values of the before-created test dataset:
+
+```{r}
+lda.pred <- predict(lda.fit, newdata = test)
+```
+
+A cross-tabulation with the original crime values (stored in *correct_classes*) can give a nice overview on how well the fitting worked.
+
+```{r}
+table(correct = correct_classes, predicted = lda.pred$class)
+```
+
+Looking at the cross-tabulation one can see that for this data set the *high* prediction is perfect, the *med-high* classification quite good, but for the lower categories *low* and *high* the model could be improved.
+
+### 7. Distances, K-Means and visualization of the clusters
+
+Reload the Boston dataset and scale it to standardize the data, before comparing the distances.
+
+```{r}
+# load MASS and Boston
+library(MASS)
+data('Boston')
+
+boston_scaled2 <- scale(Boston)
+```
+
+**Distances**
+
+Without specifying the method as an attribute in the dist function, the euclidian distance is calculated. The method can be changed, e.g. to ```method="manhattan"``` which will than have different results.
+
+```{r}
+dist_eu <- dist(boston_scaled2)
+summary(dist_eu)
+```
+
+
+**K-Means clustering**
+
+Let's do K-Means clustering on the dataset, starting with 4 as a first try for the number of cluster centers. The results can be looked at with pairs.
+
+```{r}
+km <-kmeans(Boston, centers = 4)
+pairs(Boston, col = km$cluster)
+```
+
+As it is difficult to read anything in the total pairs plot, let's divide it into 4 parts:
+
+```{r}
+pairs(Boston[1:4], col = km$cluster)
+pairs(Boston[5:8], col = km$cluster)
+pairs(Boston[9:11], col = km$cluster)
+pairs(Boston[12:14], col = km$cluster)
+```
+
+I will stick to the [5:8] part of the dataset and investigate how the number of clusters (2,3,5) will change the result of the initial number of 4 clusters.
+
+```{r}
+
+km <-kmeans(Boston, centers = 2)
+pairs(Boston[5:8], col = km$cluster)
+
+km <-kmeans(Boston, centers = 3)
+pairs(Boston[5:8], col = km$cluster)
+
+km <-kmeans(Boston, centers = 5)
+pairs(Boston[5:8], col = km$cluster)
+```
+
+It seems to be difficult to decide which number of clusters is the best. One can use the *total of within cluster sum of squares* (WCSS) to help with the decision. The optimal number of clusters can be seen as the point when the total WCSS is dropping radically. Let's investigate the behaviour of the total WCSS from 1 cluster to 10 clusters.
+
+```{r}
+set.seed(123) # use a certain seed for the initial cluster centers
+k_max <- 10 # set the maximum number of clusters
+
+twcss <- sapply(1:k_max, function(k){kmeans(Boston, k)$tot.withinss}) #calculate the WCSS
+
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+```
+
+The total WCSS is falling steeply until ~2 clusters, afterwards a bit less and between 3 and 4 it is again rising and falling. So we shouldn't use more than 3 clusters and 2 clusters would probably be the optimal value.
+
+Let's rerun the K-means clustering with 2 for the whole dataset.
+
+```{r}
+km <-kmeans(Boston, centers = 2)
+pairs(Boston, col = km$cluster)
 ```
