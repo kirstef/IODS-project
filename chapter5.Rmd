@@ -2,7 +2,7 @@
 
 ### 1. First look at the new data and graphical overview
 
-The new datasets to be looked at are about the  *Human Development Index* and the *Gender Inequality Index*. The data orginates from the United Nations Development Programme and further informations can be found [here](http://hdr.undp.org/en/content/human-development-index-hdi). Some preliminary *data wrangling* has been done on the data and a combined dataset has been constructed out of it, excluding some of the variables and removing some missing values. All the mutations to the dataset are documented in the "create_human.R" file (in the data folder) and the new variable names are also defined there.
+The new datasets to be looked at are about the  *Human Development Index* and the *Gender Inequality Index* in different countries around the world. The data orginates from the United Nations Development Programme and further informations can be found [here](http://hdr.undp.org/en/content/human-development-index-hdi). Some preliminary *data wrangling* has been done on the data and a combined dataset has been constructed out of it, excluding some of the variables and removing some missing values. All the mutations to the dataset are documented in the "create_human.R" file (in the data folder) and the new variable names are also defined there.
 
 Let's start by including the new prepared dataset *human* and look at dimensions, summaries and a graphical overview.
 
@@ -14,7 +14,7 @@ dim(human)
 head(human)
 ```
 
-We have 155 observations and 8 variables, consisting of the ratio of females vs. males having at least secondary education (*SecEduRat*), the ratio of females vs. males in the labour force (*LabForceRat*), the expected years of schooling (*EduYearsExp*), life expectancy at birth (*LifeExp*), Gross National Income per capita (*GNI*), Maternal Mortality ratio (*MatMortRat*), Adolescent birth rate (*AdoBirthRate*) and percentage of female representatives in parliament (*PercParl*).
+We have 155 observations for different countries (row-names) and 8 variables, consisting of the ratio of females vs. males having at least secondary education (*SecEduRat*), the ratio of females vs. males in the labour force (*LabForceRat*), the expected years of schooling (*EduYearsExp*), life expectancy at birth (*LifeExp*), Gross National Income per capita (*GNI*), Maternal Mortality ratio (*MatMortRat*), Adolescent birth rate (*AdoBirthRate*) and percentage of female representatives in parliament (*PercParl*).
 
 **Visualizations**
 
@@ -32,7 +32,7 @@ ggpairs(human)
 cor(human) %>% corrplot.mixed(number.cex = .7, tl.cex=0.5)
 ```
 
-Looking at both plots, we can see that the largest correlation is between the life expectancy at birth at the maternal mortality ratio (0.86). This doesn't sound too surprising, as probably a country with a high life expectancy value should mean that the facilities e.g. in hospitals are quite good and thus also better for birth-giving. Another high correlation is between *EduYearsExp* and *LifeExp* (0.79), letting us conclude that in countries where the life expectancy is higher, the education system is probably better as well. Another significant correlation (0.76) is between *MatMortRat* and *AdoBirthRate*. The adolescent birth rate is the birth rate per 1000 women aged 15-19 ([description see here](https://www.who.int/data/gho/indicator-metadata-registry/imr-details/3073#:~:text=Definition%3A,for%20women%20aged%2015%2D19.)). The high correlation with the maternal mortality rate would support the statement given on the above-mentioned WHO site that people giving birth early "are subject to higher risks or complications or even death during pregnancy and birth". 
+Looking at both plots, we can see that the largest correlation is between the life expectancy at birth and the maternal mortality ratio (0.86). This doesn't sound too surprising, as probably a country with a high life expectancy value should mean that the facilities e.g. in hospitals are quite good and thus also better for birth-giving - and on the other hand a low life expectancy correlating with a high maternal mortality rate. Another high correlation is between *EduYearsExp* and *LifeExp* (0.79), letting us conclude that in countries where the life expectancy is higher, the education system is probably better as well. Another significant correlation (0.76) is between *MatMortRat* and *AdoBirthRate*. The adolescent birth rate is the birth rate per 1000 women aged 15-19 ([description see here](https://www.who.int/data/gho/indicator-metadata-registry/imr-details/3073#:~:text=Definition%3A,for%20women%20aged%2015%2D19.)). The high correlation with the maternal mortality rate would support the statement given on the above-mentioned WHO site that people giving birth early "are subject to higher risks or complications or even death during pregnancy and birth". 
 
 Let's look at these two variables as an example.
 
@@ -46,28 +46,28 @@ The trend is quite visible.
 
 
 ### 2. PCA on the non-standardized data
-A ```summary()``` of the data shows us once more the variables we are dealing with.
+A ```summary()``` of the data gives us once more information about the variables we are dealing with.
 
 ```{r}
 summary(human)
 ```
 
-To get more understanding about the correlations between the different variables we want to use **Principal Component Analysis** (PCA), to extract the **principal components** of our data matrix and create a lower dimension representation with those.
+To gain some more understanding about the correlations between the different variables we want to use **Principal Component Analysis** (PCA), to extract the **principal components** of our data matrix and create a lower dimension representation with those.
 We will perform the PCA with the **Singular Value Decomposition** (SVD) method, which can be done in R using the ```prcomp()``` function.
 As a start, the PCA will be performed on the non-standardized data and a biplot is drawn with the two leading principal components (PC1, PC2).
 
 
-```{r}
+```{r fig.height = 8}
 pca_human <- prcomp(human)
 s <- summary(pca_human)
 s # Look at the summary of the pca values
 pca_pr <- round(100*s$importance[2, ], digits=1) #Round the values and print them as percentages of variance
 pca_pr
 
-biplot(pca_human, choices = 1:2,cex = c(0.45, 0.8),col = c("grey40", "deeppink2"))
+biplot(pca_human, choices = 1:2,cex = c(0.6, 0.8),col = c("grey40", "deeppink2"))
 ```
 
-Already the error messages tell us that we face a problem here: The angles can't be drawn in a correct way, and the variable compared without standardizing them. Most of the data is accumulated in one corner of the plot. We can see that the variability is captured only by the first principal component (100%), whereas all the other PC are 0. GNI might have the highest contribution here, as it is the only arrow visible. One can see clearly, that a standardization of the variables is needed.
+Already the error messages tell us that we face a problem here: The angles can't be drawn in a correct way, and the variables can't be compared without standardizing them. Most of the data is accumulated in one corner of the plot. We can see that the variability is captured only by the first principal component (100%), whereas all the other PC are 0. GNI might have the highest contribution here, as it is the only arrow visible. One can see clearly, that a standardization of the variables is needed.
 
 ### 3. PCA on the standardized data
 
@@ -78,7 +78,7 @@ human_std <- scale(human)
 summary(human_std)
 ```
 
-The variables are now normalized, the mean being again 0. Let's see how this will now affect the PCA.
+The variables are now normalized, as can be seen above. Let's see how this will now affect the PCA.
 
 ```{r}
 pca_human_std <- prcomp(human_std)
@@ -92,18 +92,18 @@ pca_pr_std
 Now the contributions of the different PC make more sense: The first principal component captures about 53% of the variability, the second one 16.2%, followed by PC3(9.6%), PC4(7.6%), PC5(5.5%), PC6(3.6%), PC7(2.6%) and PC8(1.3%).
 Now let's make a new plot, stating the importance of the first two components in the labels.
 
-```{r}
+```{r fig.height = 8}
 # Create a labeling object for the x- and y axis
 pc_lab <- paste0(names(pca_pr_std), " (", pca_pr_std, "%)")
 
 # Draw the new biplot with scaled values and labels for the axes
-biplot(pca_human_std, cex = c(0.45, 0.8), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+biplot(pca_human_std, cex = c(0.6, 0.8), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
 ```
 
 ### 4. Interpretations of the first two principal component dimensions
 
 We can now differentiate between the different arrows and make some comments on their relationships.
-We have seen before that *AdoBirthRate* and *MatMortRat* have a significant correlation. Looking at the PCA biplot of the standardized dataset, we can see that the angle between those values is very small, which also supports a high correlation. Moreover, the angle between these variables and the PC1 axis is quite small and almost orthogonal to PC2, which means they have a high correlation to the first principal component but not to the second. The only two variables which seem to have the main impact to PC2 are *PercParl* and *LabForceRat*. BAsed on the biplot drawn after the PCA, I would say that the first two principal component dimensions describe the data quite well, as the variables seem to have a good correlation with either the first or the second component. Looking at the standard deviations of the different components (could be visualised in a *scree plot*), one can see that only PC1 and PC2 are above 1, whereas PC3 is already below 1. This also suggests that the first two components could be enough to describe the correlations, The two components together account for almost 70% of the variance in the dataset.
+We have seen before that *AdoBirthRate* and *MatMortRat* have a significant correlation. Looking at the PCA biplot of the standardized dataset, we can see that the angle between those values is very small, which also supports a high correlation. Moreover, the angle between these variables and the PC1 axis is quite small and almost orthogonal to PC2, which means they have a high correlation to the first principal component but not to the second. The only two variables which seem to have the main impact to PC2 are *PercParl* and *LabForceRat*. Based on the biplot drawn after the PCA, I would say that the first two principal component dimensions describe the data quite well, as the variables seem to have a good correlation with either the first or the second component. Looking at the standard deviations of the different components (could be visualised in a *scree plot*), one can see that only PC1 and PC2 are above 1, whereas PC3 is already below 1. This also suggests that the first two components could be enough to describe the correlations. The first two components together account for almost 70% of the variance in the dataset.
 
 
 ### 5. Exploring the tea dataset
@@ -125,11 +125,11 @@ str(tea)
 ```
 
 Looking at the dimensions and structure of the dataset we can see it is made up of 300 observations (people interviewed) and 36 variables. 
-Using a pairs or ggpairs plot on the complete dataset would be complete too much. (Tried it, takes forever, and you can't decipher anything.;)) So, let's look directly at a subset of the data.
+Using a pairs or ggpairs plot on the complete dataset would be too much. (Tried it, takes forever, and you can't decipher anything.;)) So, let's look directly at a subset of the data.
 
 I will keep the same subset as was examined in the datacamp exercise, look at the summary and gather the variables in bar plots.
 
-```{r}
+```{r fig.height=8}
 #library(FactoMineR); library(dplyr); library(ggplot2); library(tidyr)
 # column names to keep in the new dataset tea_time
 keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
@@ -141,7 +141,7 @@ gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + g
 
 ```
 
-Taking a quick glance at the data, one can see that most of the people interviewed prefer Earl Grey, drink tea pure (apart from maybe sugar), prefer teabags and don't drink tea at lunch. About half of the interviewees take tea without sugar, the other half with. This is just a first quick view on the summary data - the kind of tea might for example have an impact on whether one takes it with milk, sugar, lemon etc. 
+Taking a quick glance at the data, one can see that most of the people interviewed prefer Earl Grey, drink tea pure (apart from maybe sugar), prefer teabags and don't drink tea at lunch. About half of the interviewees take tea without sugar, the other half with. This is just a first quick view on the summary data - the kind of tea might for example have an impact on whether one takes it with milk, sugar, lemon etc. or without. 
 So let's continue with a **Multiple Correspondence Analysis** (MCA) to dig deeper into the qualitative dataset.
 
 **Multiple Correspondence Analysis (MCA) **
@@ -149,7 +149,7 @@ So let's continue with a **Multiple Correspondence Analysis** (MCA) to dig deepe
 MCA is a method to analyze qualitative data. It can be used to find and explore patterns and (similar to PCA) reduce the dimensions.
 The ```summary()``` on the MCA methods provides us with statistical outputs, such as the v.test and importance of the dimensions and the correlations with the different variables. 
 
-```{r}
+```{r fig.width = 8}
 mca <- MCA(tea_time, graph = FALSE)
 
 # summary of the model
@@ -161,8 +161,9 @@ plot(mca, invisible=c("ind"),habillage = "quali")
 
 ```
 
-The summary gives us values for the different dimensions, in the biplot the first two (Dim1: 15.24%, Dim2: 14.23%) are shown.
-In the MCA biplot, the first two dimensions are plotted. Using the *habillage* attribute conveniently colours the variables according to the categories ("How": alone/lemon/milk/other, "how":tea bag/tea bag+unpackaged/unpackaged, "lunch": lunch/Not.lunch, "sugar": No.sugar/sugar, "Tea": black/Earl Grey/green and "where": chain store/chain store+tea shop/tea shop).
-Let's investigate further: One aspect that can be explored on are the different tea types and sugar. Both *No.sugar* am *sugar* are quite close to *Earl Grey*, but *sugar* is farther saw from *black* and *green* tea, suggesting that more people who drink Earl Grey are likely to drink it with added sugar than people drinking black or green tea.
-Another thing quite visible is how much the different variables are correlated to Dim1 and Dim2. *other* has apparently the highest correlation to Dim2 (followed by *chain store+tea shop*, *tea bag+upackaged* and *green*), whereas *unpackaged* and *tea shop* show a higher correlation to Dim1, but also visibly a correlation to Dim2.
+The summary gives us values for the different dimensions -  In the MCA biplot, the first two dimensions (Dim1: 15.24%, Dim2: 14.23%) are shown.
+ Using the *habillage* attribute conveniently colours the variables according to the categories ("How": alone/lemon/milk/other, "how":tea bag/tea bag+unpackaged/unpackaged, "lunch": lunch/Not.lunch, "sugar": No.sugar/sugar, "Tea": black/Earl Grey/green and "where": chain store/chain store+tea shop/tea shop).
+ 
+Let's investigate further: One aspect that can be explored are the different tea types and sugar. Both *No.sugar* am *sugar* are quite close to *Earl Grey*, but *sugar* is farther away from *black* and *green* tea, suggesting that more people who drink Earl Grey might add sugar than people drinking black or green tea.
+Another thing quite visible is how much the different variables are correlated to Dim1 and Dim2. *other* has apparently the highest correlation to Dim2 (followed by *chain store+tea shop*, *tea bag+upackaged* and *green*), whereas *unpackaged* and *tea shop* show a higher correlation to Dim1, but as well a significant correlation to Dim2.
 
