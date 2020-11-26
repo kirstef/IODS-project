@@ -55,7 +55,7 @@ head(gii)
 # LabForceMale: male labor force participation rate
 
 colnames(hd) <- c("HDIRank","Country","HDI","LifeExp","EduYearsExp","EduYearsMean", "GNI", "GNIRank-HDIRank")
-colnames(gii) <- c("GIIRank","Country","GII","MatMortRate","AdoBirthRate","PercParl", "SecEduFem", "SecEduMale", "LabForceFem", "LabForceMale")
+colnames(gii) <- c("GIIRank","Country","GII","MatMortRat","AdoBirthRate","PercParl", "SecEduFem", "SecEduMale", "LabForceFem", "LabForceMale")
 
 #Let's check again
 
@@ -82,7 +82,78 @@ dim(human)
 dim(gii)
 dim(hd)
 
-# The joined dataset has 195 ovservations and 19 variables as it should have.
+# The joined dataset has 195 observations and 19 variables as it should have.
 
 # Save the new joined data to the data folder
-write.csv(human, file = './data/human.csv')
+write.csv(human, file = './data/human.csv', row.names = FALSE) 
+
+
+#### 2nd part ####
+# Load again our human data (also available via "human" because it was build in this script, but for completeness let's check again)
+human <- read.csv('./data/human.csv', header = T)
+names(human)
+dim(human)
+str(human)
+
+summary(human)
+head(human)
+
+#### MUTATE THE DATA: GNI AS NUMERIC ####
+# load necessary packages and libraries tidyr and stringr
+
+library(tidyr)
+library(stringr)
+
+# look at the structure of the GNI column before mutation
+str(human$GNI)
+
+# perform string manipulation (remove the commas) and save as numeric
+human$GNI <- str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric()
+
+# print the GNI again to check that everything is as it should
+human$GNI
+
+
+#### EXCLUDE UNNEEDED VARIABLES
+# select the columns to keep and overwrite the human df with only these remaining columns
+keep <- c("Country", "SecEduRat", "LabForceRat",  "EduYearsExp", "LifeExp", "GNI", "MatMortRat", "AdoBirthRate", "PercParl")
+human <- select(human, one_of(keep))
+dim(human) #check: 195 observations, 9 variables
+
+
+#### REMOVE ROWS WITH NA VALUES
+# completeness indicator shows TRUE for rows without NA values and FALSE for rows with NA values
+complete.cases(human)
+
+# Print the completeless indicator as a last column
+data.frame(human[-1], comp = complete.cases(human))
+
+# filter out rows with NA values
+human_ <- filter(human, complete.cases(human) == TRUE)
+
+# Check and compare again
+dim(human)
+dim(human_)
+
+#### REMOVE THE ROWS WITH REGIONS ####
+# At the end of the df we find the rows with regions instead of countries - let's look at those and then remove them
+tail(human_,n=10)
+last <- nrow(human_) - 7 # last 7 entries are the ones not needed
+human_ <- human_[1:last, ]
+
+#### DEFINE ROW NAMES BY COUNTRY NAMES, REMOVE COUNTRY COLUMN ####
+rownames(human_) <- human_$Country
+head(human_)
+human_ <- dplyr::select(human_, -Country)
+head(human_) # Check ok
+
+# overwrite old human file
+#write.csv(human_, file = './data/human.csv',row.names=TRUE) -> this leads to a "row-names" column with variable x and thus 9 variables which I don't want. With write.table it works and keeps the countries as column-names.
+write.table(human_, './data/human.csv')
+
+dim(human_)
+#human <- read.csv('./data/human.csv')
+
+human <- read.table('./data/human.csv')
+head(human)
+dim(human)
