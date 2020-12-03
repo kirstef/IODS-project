@@ -332,6 +332,19 @@ ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
   scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
 ```
 
+If we want to have both treatment groups in one plot, we have to change the subject IDs, to make them unique (not twice 1:20, but running from 1:40). So let's create a new variable *subject_new* to be able to do this plot.
+
+```{r fig.height=6}
+subject_new = c(rep(1:40, times=9)) # new IDs
+BPRSL <- BPRSL %>% mutate(subject_new = factor(subject_new))
+tail(BPRSL) # check
+
+ggplot(BPRSL, aes(x = week, y = bprs, group = subject_new, color = treatment)) +
+  geom_line() + scale_x_continuous(name = "week", breaks = seq(0, 8, 1))  + scale_y_continuous(name = "bprs") + theme(legend.position = "top")
+```
+
+We can already assume from this plot and the ones above that there are no huge differences between the treatment groups.
+
 ### Linear Regression for the BPRSL dataset
 
 As the visualisations are still quite chaotic, we will fit as a next step a linear regression model, using the weight as response and Time and Group as explanatory variables.
