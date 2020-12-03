@@ -16,10 +16,10 @@ library(tidyr)
 
 ### First look at the RATS dataset
 
-We have wrangled the original wide RATS dataset from [here]("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt") into a long version and saved it in the data-folder (The description of the data wrangling part can be found in the script *meet_and_repeat.R* in the data folder.)
+We have wrangled the original wide RATS dataset from [here](https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt) into a long version and saved it into the data-folder (The description of the data wrangling part can be found in the script [*meet_and_repeat.R*](https://github.com/kirstef/IODS-project/blob/master/data/meet_and_repeat.R) in the data folder.)
 The dataset compares 16 rats belonging to one of three groups. Depending on the group membership they get a different diet and the weights are compared at different times over a complete timespan of 64 days.
 
-First, let's read in the original dataset *RATS* and the long and further prepared version *RATSL* and get an overview on what we are dealing with
+First, let's read in the original dataset *RATS* and the long and further prepared version *RATSL* and get an overview on the datasets we are dealing with.
 
 ```{r}
 RATS <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", sep ="\t", header = T)
@@ -28,7 +28,7 @@ RATSL$ID <- factor(RATSL$ID)
 RATSL$Group <- factor(RATSL$Group)
 ```
 
-Using ```head()``` and ```tail()``` one can easily see the differences between the wide (RATS) and the long version (RATSL) of the data. Whereas in RATS the different weeks are all separate variables, in *RATSL* they are combined to the weeks variable which has the different weeks as categories. The datatable thus becomes smaller in width but longer in length (dimensions: `r dim(RATSL)`), which makes it a better format for the following analysis.
+Using ```head()``` and ```tail()```, one can easily see the differences between the wide (RATS) and the long version (RATSL) of the data. Whereas in RATS the different days are all separate variables, in *RATSL* they are combined to the *Time* variable which has the different *days* as categories. The datatable thus becomes smaller in width but longer in length (dimensions: `r dim(RATSL)`), which makes it a better format for the following analysis.
 
 ```{r}
 head(RATS)
@@ -50,7 +50,7 @@ tail(RATSL)
 
 Let's first try a plot of the weight against the time, differentiating the different nutrition study groups by color.
 
-```{r}
+```{r, fig.height=5}
 # Plot the RATSL data
 ggplot(RATSL, aes(x = Time, y = weight, linetype = ID)) +
   geom_line(aes(color=ID)) +
@@ -59,13 +59,14 @@ ggplot(RATSL, aes(x = Time, y = weight, linetype = ID)) +
   scale_y_continuous(limits = c(min(RATSL$weight), max(RATSL$weight)))
 ```
 
-It is clearly visible, that the rats belonging to the nutrition study group 1 have the least starting weight. The rats in group 2 seem to have a steeper rise in the weight. This phenomenon - tracking individual observations - might become more visible when plotting standardized data.
+It is clearly visible, that the rats belonging to the nutrition study group 1 have the least starting weight. The rats in group 2 seem to have a steeper rise in the weight. This phenomenon - tracking individual observations - might become more visible when plotting standardized data. Group 2 has shows furthermore a quite visible outlier - a rat which has a starting weight about 100 g higher than the rest of its group.
 
 **Standardization**
+
 To standardize the values of each observation, we subtract the relevant occasion mean from the original observation and divide it by the corresponding standard deviation: $$standardised(x) = \frac{x- mean(x)}{sd(x)} $$
 The standardized values will be added to a new column *stdweight* into our RATSL dataset. We can then explore a plot with the now standardized data.
 
-```{r}
+```{r, fig.height =5}
 
 # Standardise the variable weight
 RATSL <- RATSL %>% group_by(Time) %>% mutate(stdweight = (weight - mean(weight))/sd(weight)) %>% ungroup()
@@ -88,17 +89,17 @@ In difference to the non-standardized plot one can see that the rising character
 
 **Summary Graphs**
 
-The differences amongst the different group can be explored further by employing summary graphs.
+The differences amongst the different groups can be explored further by employing summary graphs.
 
 This can be achieved by plotting the mean of the weight values for the different times for the three nutrition study groups respectively and add the standard error of the mean as error bars: $$ se = \frac{sd(x)}{\sqrt{n}} $$
 
 First some preparations:
 
 ```{r}
-# Number of measurement times, baseline (time 0) included
+# Number of measurement times, baseline (day 1) included
 n <- RATSL$Time %>% unique() %>% length()
 
-# Summary data with mean and standard error of bprs by treatment and week 
+# Summary data with mean and standard error of the weight by group and time 
 RATSS <- RATSL %>%
   group_by(Group, Time) %>%
   summarise( mean = mean(weight), se = sd(weight)/sqrt(n) ) %>%
@@ -137,7 +138,7 @@ ggplot(RATSL, aes(x = factor(Time), y = weight, fill = Group)) +
 
 ```
 
-In this Box Plot diagram we can see the outliers in the different groups for every measurement. Still, it is not clear if this visualisation makes much sense as there are quite  few individuals per group (8 in Group 1, 4 in Group 2 and 4 in Group 3). A possibility is (in order to have more datapoints) to make the mean boxplot (over time) for the different groups.
+In this Box Plot diagram we can see the outliers in the different groups for every measurement. Still, it is not clear if this visualisation makes much sense as there are quite  few individuals per group (8 in Group 1, 4 in Group 2 and 4 in Group 3). A possibility is (also to include more data into each box plot) to make the mean boxplot (over time) for the different groups.
 
 ```{r}
 RATSLSUM <- RATSL %>%
@@ -161,7 +162,7 @@ ggplot(RATSLSUM, aes(x = Group, y = mean)) +
 ```
 
 As expected from the plot before, we can still see the outliers in the three different groups.
-Next, let's remove these from the boxplot. 
+Next, let's remove these from the boxplots. 
 Let's start by just removing the most obvious outlier from group 2 which can be rejected by cutting on the mean weight value.
 
 ```{r}
@@ -177,6 +178,7 @@ ggplot(RATSLSUM1, aes(x = Group, y = mean)) +
 
 ```
 
+This has a huge impact on the box plot for group 2.
 Now let's get rid of all three visible outliers.
 We can identify the individuals we want to filter from the summary plots and the corresponding legend. The most obvious outlier is #12 from Group 2, followed by #13 from Group 3 and #2 from Group 1. 
 
@@ -196,15 +198,15 @@ ggplot(RATSLSUM1, aes(x = Group, y = mean)) +
 
 ```
 
-Without the outliers, the boxplots are quite sharp, less skewed (there is just little variation inside the groups, but quite some between the groups). But again, the sample size is quite limited, so one could question, if this visualisation makes sense and removing three individuals from a set of 16 is already (and considering the groups 1 out of 4 for groups 2 and 3) is already quite a fraction.
+Without the outliers, the boxplots are quite sharp, less skewed (there is just little variation inside the groups, but quite some between the groups). They don't show any whiskers, so no points are found outside the upper and lower quartiles. But again, the sample size is quite limited, so one could question, if this visualisation makes sense and removing three individuals from a set of 16 is already (and considering the groups 1 out of 4 for groups 2 and 3) quite a fraction.
 
 ### Perform T-Test and Anova test on the data
 
 **T-test**
 
-To get more statistical information on the relationship between the different groups, one can do a t-test. As the t-test only compares to different groups, I will first perform group cuts to compare always two groups.
+To get more statistical information on the relationship between the different groups, one can do a t-test. As the t-test only compares two different groups, I will first perform group cuts to be able to compare always two groups.
 
-The t-test confirms -- through a very low p-value -- the group difference. 
+
 
 
 
@@ -213,14 +215,22 @@ The t-test confirms -- through a very low p-value -- the group difference.
 RATSCUT23 <- RATSLSUM1 %>% filter(Group !=3) 
 RATSCUT13 <- RATSLSUM1 %>% filter(Group !=2) 
 RATSCUT12 <- RATSLSUM1 %>% filter(Group !=3) 
+```
 
+The t-test below confirms for the different group comparisons (2-3, 1-3, 1-2) -- through a very low p-value -- the group difference. 
+
+The lowest p-value is for the t-test on Group 1 and Group 3, which was to be expected by taking into account the earlier plots.
+
+```{r}
 t.test(mean ~ Group, data = RATSCUT23, var.equal = TRUE) # T-test on Group 2 and Group 3
 t.test(mean ~ Group, data = RATSCUT13, var.equal = TRUE) # T-test on Group 1 and Group 3
 t.test(mean ~ Group, data = RATSCUT12, var.equal = TRUE) # T-test on Group 1 and Group 2
 ```
 
 
-To check, if the significance changed a lot by removing the outliers, let's do the same test including the outliers.
+To check, if the significance changed a lot by removing the outliers, let's do the same tests once more including the outliers.
+
+As can be seen below, we still have quite low p-values, although the values are now some orders higher than before. Especially the comparison group 1 to group 3 gives again a very small p-value.
 
 
 ```{r}
@@ -234,7 +244,7 @@ t.test(mean ~ Group, data = RATS13, var.equal = TRUE) # T-test on Group 1 and Gr
 t.test(mean ~ Group, data = RATS12, var.equal = TRUE)# T-test on Group 1 and Group 2
 ```
 
-Still, we have quite low p-values, although the values are now some orders higher. Especially the comparison group 1 to group 3 gives a very small p-value.
+
 
 **Anova test**
 
@@ -252,7 +262,7 @@ summary(fit)
 anova(fit)
 ```
 
-One can see that the baseline of *RATS* is strongly related to the BPRS values to the weight values in the following time, where the significance for the group has a higher p-value (about 0.076). Thus, the weight gain seems to be depending more on the starting weight than on the provided diet.
+One can see that the baseline of *RATS* is strongly related to the weight values at later times, whereas the significance for the group has a higher p-value (about 0.076). Thus, the weight gain seems to be depending more on the starting weight than on the provided diet.
 
 
 ## 2. Analysis of the BPRS dataset
@@ -310,7 +320,7 @@ ggplot(BPRSL, aes(x= week, y = bprs, group = treatment)) +
 ```
 
 As we can see in the above plot, we have the different subject ID double, because the numbers 1-20 were both given to the different individuals belonging to group 1 and 2.
-Thus, it makes sense to differentiate between the treatment groups. The same plot can be done as well without the subject IDs, to see if we can see some group specific patterns.
+Thus, it makes sense to differentiate between the treatment groups. The same plot can be done as well without the subject IDs and might be helpful for seeing some group-specific patterns.
 
 ```{r}
 ggplot(BPRSL, aes(x= week, y = bprs, group = treatment)) + 
@@ -322,7 +332,7 @@ ggplot(BPRSL, aes(x= week, y = bprs, group = treatment)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ```
 
-The below plot makes it easier to track the different subjects and divide between the different groups. It is a bit less "chaotic" like this.
+The plot below makes it easier to track the different subjects and distinguish between the different groups. It is a bit less "chaotic" like this.
 
 ```{r, fig.height=6}
 ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
@@ -332,7 +342,7 @@ ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
   scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
 ```
 
-If we want to have both treatment groups in one plot, we have to change the subject IDs, to make them unique (not twice 1:20, but running from 1:40). So let's create a new variable *subject_new* to be able to do this plot.
+If we want to have both treatment groups in one plot, we have to change the subject IDs, to make them unique (not twice 1:20, but running from 1:40 instead). So let's create a new variable *subject_new* to be able to do this plot.
 
 ```{r fig.height=6}
 subject_new = c(rep(1:40, times=9)) # new IDs
@@ -347,7 +357,7 @@ We can already assume from this plot and the ones above that there are no huge d
 
 ### Linear Regression for the BPRSL dataset
 
-As the visualisations are still quite chaotic, we will fit as a next step a linear regression model, using the weight as response and Time and Group as explanatory variables.
+As the visualisations are still quite chaotic and one can't get any serious conclusions from them (apart from suspecting that the different treatment groups don't have such a different impact on the *bprs*), we will fit as a next step a linear regression model, using the *weight* as response and *Time* and *Group* as explanatory variables.
 
 ```{r}
 # create a regression model BPRS_reg
@@ -358,21 +368,23 @@ summary(BPRS_reg)
 
 ```
 
-There is a high significance for a linear relationship between weeks and bprs. However, there is no significant variation between treatment group 1 and 2.
+There is a high significance for a linear relationship between *weeks* and *bprs*. However, there is no significant variation between treatment group 1 and 2.
 
 
 ### Random Intercept Model
 
-The model above still ignores the repeated measures and just evaluates every observation of the weight as uncorrelated - this is probably far from the truth. So we will now look at more advanced models. The random intercept model makes it possible for the different subjects to have different intercepts in the linear regression fit.
+The model above still ignores the repeated measures and just evaluates every observation of the weight as uncorrelated - this is probably far from the truth. So we will now look at more advanced models. The **random intercept model** makes it possible for the different subjects to have different intercepts in the linear regression fit.
 In the first fit of the random intercept model we use again *week* and *treatment* as explanatory variables.
 
 For the fit the *lme4* package can be used: It again takes the formula as a first argument, but in addition to the fixed effects also takes into account random-effects, which are distinguished from the other variables with a | (1 referring to the intercept).
 
 
-```{r}
+```{r, message=FALSE}
 # access library lme4
 library(lme4)
+```
 
+```{r}
 # Create a random intercept model
 BPRS_ref <- lmer(bprs ~ week + treatment + (1 | subject), data = BPRSL, REML = FALSE)
 
@@ -406,6 +418,8 @@ anova(BPRS_ref1, BPRS_ref)
 Comparing the $\chi^2$ values of the two fits, we can see that BPRS_ref1 seems to be better that BPRS_ref.
 
 ### Random Intercept and Random Slope Model with interaction
+
+In the next fit we test the interaction of the week and the treatment group by using ```week * treatment``` in the fit formula.
 
 ```{r}
 # create a random intercept and random slope model with the interaction
