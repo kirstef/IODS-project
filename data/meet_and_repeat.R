@@ -96,15 +96,5 @@ head(bprsltest)
 ratsltest <- read.csv('./data/ratsl.csv') #CHECK
 head(ratsltest)
 
-#### VISUALISATIONS ####
-#Access the package ggplot2
-library(ggplot2)
 
-# Draw the plot
-ggplot(bprsltest, aes(x = week, y = bprs, linetype = subject)) +
-  geom_line() +
-  scale_linetype_manual(values = rep(1:10, times=4)) +
-  facet_grid(. ~ treatment, labeller = label_both) +
-  theme(legend.position = "none") + 
-  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
 

@@ -324,7 +324,7 @@ ggplot(BPRSL, aes(x= week, y = bprs, group = treatment)) +
 
 The below plot makes it easier to track the different subjects and divide between the different groups. It is a bit less "chaotic" like this.
 
-```{r, width=5}
+```{r, fig.height=6}
 ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
   geom_line(aes(color=subject)) +
   scale_linetype_manual(values = rep(1:10, times=4)) +
@@ -337,7 +337,7 @@ ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
 As the visualisations are still quite chaotic, we will fit as a next step a linear regression model, using the weight as response and Time and Group as explanatory variables.
 
 ```{r}
-# create a regression model RATS_reg
+# create a regression model BPRS_reg
 BPRS_reg <- lm(bprs ~ week + treatment, data = BPRSL)
 
 # print out a summary of the model
@@ -394,7 +394,7 @@ Comparing the $\chi^2$ values of the two fits, we can see that BPRS_ref1 seems t
 
 ### Random Intercept and Random Slope Model with interaction
 
-```{r fig.height = 5}
+```{r}
 # create a random intercept and random slope model with the interaction
 BPRS_ref2 <- lmer(bprs ~ week * treatment + (week | subject), data = BPRSL, REML = FALSE)
 
@@ -409,15 +409,15 @@ Again looking at the $\chi^2$ , BPRS_ref2 performs a bit better than BPRS_ref1, 
 We save the fitted values of this model in a vector, add it to our *BPRSL* data as another column and then do the same plot as above with the fitted data.
 
 
-```{r}
+```{r, fig.height=6}
 # Create a vector of the fitted values
 Fitted <- fitted(BPRS_ref2)
 
-# Create a new column fitted to RATSL
+# Create a new column fitted to BPRSL
 BPRSL <- BPRSL %>% mutate(fitted = Fitted)
 
 
-# draw the plot of RATSL with the Fitted values of weight
+# draw the plot of BPRSL with the fitted values of weight
 ggplot(BPRSL, aes(x= week, y = fitted, color=subject)) + 
   geom_line() +
   scale_linetype_manual(values = rep(1:10, times=2)) +
